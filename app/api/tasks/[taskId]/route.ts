@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, verifyTenantAccess } from '@/lib/api-auth'
+import { requireAuth, verifyTenantAccess, canAssignTasks } from '@/lib/api-auth'
 import db, {
   tasks,
   projects,

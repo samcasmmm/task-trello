@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
 import {
@@ -59,13 +60,53 @@ export default function TaskDetailView({
   const [loading, setLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [checklistTitle, setChecklistTitle] = useState('');
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     title: task.title,
     description: task.description,
     status: task.status,
     priority: task.priority,
     dueDate: task.due_date,
+    assignedToId: task.assignedToId || task.assigned_to_user?.id || null,
   });
+
+  useEffect(() => {
+    // Fetch team members from tenant
+    const fetchTeamMembers = async () => {
+      try {
+        // Try to get tenantId from task, otherwise use projectId as fallback
+        let tenantId = task.tenantId || projectId;
+        if (!tenantId) {
+          console.warn(
+            'No tenantId or projectId available for fetching team members',
+          );
+          return;
+        }
+
+        const response = await fetch(`/api/tenants/${tenantId}/members`);
+        if (!response.ok) {
+          console.error('Failed to fetch team members:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+        // Transform API response to flat format for easier use
+        const members = data.map((m: any) => ({
+          id: m.id,
+          userId: m.user?.id || m.userId,
+          email: m.user?.email || m.email,
+          fullName: m.user?.fullName || m.fullName,
+          avatarUrl: m.user?.avatarUrl || m.avatarUrl,
+          role: m.role,
+        }));
+        console.log('Team members loaded:', members);
+        setTeamMembers(members);
+      } catch (error) {
+        console.error('Failed to fetch team members:', error);
+      }
+    };
+    fetchTeamMembers();
+  }, [task.tenantId, projectId]);
 
   const handleUpdate = async () => {
     setLoading(true);
@@ -79,6 +120,7 @@ export default function TaskDetailView({
           status: formData.status,
           priority: formData.priority,
           dueDate: formData.dueDate,
+          assignedToId: formData.assignedToId,
         }),
       });
       if (!response.ok) throw new Error('Failed to update task');
@@ -128,6 +170,27 @@ export default function TaskDetailView({
       setChecklistTitle('');
     } catch (error: any) {
       toast.error(error.message || 'Failed to add checklist item');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAssignmentChange = async (value: string) => {
+    const userId = value === '__unassigned__' ? null : value;
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assignedToId: userId,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to update assignment');
+      setFormData({ ...formData, assignedToId: userId });
+      toast.success(userId ? 'Task assigned!' : 'Task unassigned!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update assignment');
     } finally {
       setLoading(false);
     }
@@ -216,6 +279,58 @@ export default function TaskDetailView({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Assigned to */}
+            <div>
+              <label className='text-sm font-medium text-gray-600 block mb-2'>
+                Assigned To
+              </label>
+              <Select
+                value={formData.assignedToId || '__unassigned__'}
+                onValueChange={handleAssignmentChange}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  {formData.assignedToId && task.assigned_to_user ? (
+                    <div className='flex items-center gap-2'>
+                      <Avatar className='h-4 w-4'>
+                        <AvatarImage
+                          src={task.assigned_to_user.avatarUrl || ''}
+                        />
+                        <AvatarFallback className='text-xs'>
+                          {task.assigned_to_user.fullName
+                            ?.substring(0, 2)
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{task.assigned_to_user.fullName}</span>
+                    </div>
+                  ) : (
+                    <span>Select team member...</span>
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='__unassigned__'>Unassigned</SelectItem>
+                  {teamMembers &&
+                    teamMembers.length > 0 &&
+                    teamMembers.map((member) => (
+                      <SelectItem key={member.userId} value={member.userId}>
+                        <div className='flex items-center gap-2'>
+                          <Avatar className='h-4 w-4'>
+                            <AvatarImage src={member.avatarUrl || ''} />
+                            <AvatarFallback className='text-xs'>
+                              {(member.fullName || 'U')
+                                .substring(0, 2)
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {member.fullName || member.email}
+                        </div>
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Description */}
