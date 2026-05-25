@@ -43,14 +43,19 @@ export async function verifyTenantAccess(
   userId: string,
   tenantId: string
 ): Promise<boolean> {
-  const member = await db.query.tenantMembers.findFirst({
-    where: and(
-      eq(tenantMembers.tenantId, tenantId),
-      eq(tenantMembers.userId, userId)
-    ),
-  })
+  const rows = await db
+    .select({ id: tenantMembers.id })
+    .from(tenantMembers)
+    .where(
+      and(
+        eq(tenantMembers.tenantId, tenantId),
+        eq(tenantMembers.userId, userId)
+      )
+    )
+    .limit(1)
+    .execute()
 
-  return !!member
+  return rows.length > 0
 }
 
 /**
@@ -61,13 +66,19 @@ export async function verifyTenantRole(
   tenantId: string,
   requiredRole: 'owner' | 'admin' | 'member' | 'viewer'
 ): Promise<boolean> {
-  const member = await db.query.tenantMembers.findFirst({
-    where: and(
-      eq(tenantMembers.tenantId, tenantId),
-      eq(tenantMembers.userId, userId)
-    ),
-  })
+  const rows = await db
+    .select({ role: tenantMembers.role })
+    .from(tenantMembers)
+    .where(
+      and(
+        eq(tenantMembers.tenantId, tenantId),
+        eq(tenantMembers.userId, userId)
+      )
+    )
+    .limit(1)
+    .execute()
 
+  const member = rows[0]
   if (!member) return false
 
   const roleHierarchy: Record<string, number> = {

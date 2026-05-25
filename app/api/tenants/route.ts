@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/api-auth'
-import db, { tenants, tenantMembers, sql } from '@/lib/drizzle'
+import db, { eq, projects, tenants, tenantMembers, sql, inArray } from '@/lib/drizzle'
 
 /**
  * GET /api/tenants - Get all tenants for the current user
@@ -19,26 +19,50 @@ export async function GET() {
         ownerId: tenants.ownerId,
         createdAt: tenants.createdAt,
         updatedAt: tenants.updatedAt,
-        membersCount: sql<number>`(
-          SELECT COUNT(*) FROM tenant_members tm
-          WHERE tm.tenant_id = tenants.id
-        )`,
-        projectsCount: sql<number>`(
-          SELECT COUNT(*) FROM projects p
-          WHERE p.tenant_id = tenants.id
-        )`,
       })
       .from(tenants)
-      .where(
-        sql`EXISTS (
-          SELECT 1 FROM tenant_members tm
-          WHERE tm.tenant_id = tenants.id
-            AND tm.user_id = ${authContext.userId}
-        )`
-      )
+      .innerJoin(tenantMembers, eq(tenantMembers.tenantId, tenants.id))
+      .where(eq(tenantMembers.userId, authContext.userId))
       .execute()
 
-    return NextResponse.json(tenantRows)
+    if (tenantRows.length === 0) {
+      return NextResponse.json([])
+    }
+
+    const tenantIds = tenantRows.map((tenant) => tenant.id)
+
+    const memberCountRows = await db
+      .select({
+        tenantId: tenantMembers.tenantId,
+        count: sql<number>`count(*)`,
+      })
+      .from(tenantMembers)
+      .where(inArray(tenantMembers.tenantId, tenantIds))
+      .groupBy(tenantMembers.tenantId)
+      .execute()
+
+    const projectCountRows = await db
+      .select({
+        tenantId: projects.tenantId,
+        count: sql<number>`count(*)`,
+      })
+      .from(projects)
+      .where(inArray(projects.tenantId, tenantIds))
+      .groupBy(projects.tenantId)
+      .execute()
+
+    const memberCountMap = new Map(memberCountRows.map((row) => [row.tenantId, Number(row.count)]))
+    const projectCountMap = new Map(projectCountRows.map((row) => [row.tenantId, Number(row.count)]))
+
+    const tenantsWithCounts = tenantRows.map((tenant) => ({
+      ...tenant,
+      _count: {
+        members: memberCountMap.get(tenant.id) ?? 0,
+        projects: projectCountMap.get(tenant.id) ?? 0,
+      },
+    }))
+
+    return NextResponse.json(tenantsWithCounts)
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },

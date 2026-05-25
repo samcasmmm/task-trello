@@ -213,21 +213,21 @@ export async function GET(
 
     const recentActivities = tenantUserIds.length > 0
       ? await db
-          .select({
-            id: auditLogs.id,
-            action: auditLogs.action,
-            metadata: auditLogs.metadata,
-            createdAt: auditLogs.createdAt,
-            userId: users.id,
-            userFullName: users.fullName,
-            userEmail: users.email,
-          })
-          .from(auditLogs)
-          .leftJoin(users, eq(auditLogs.userId, users.id))
-          .where(inArray(auditLogs.userId, tenantUserIds))
-          .orderBy(desc(auditLogs.createdAt))
-          .limit(5)
-          .execute()
+        .select({
+          id: auditLogs.id,
+          action: auditLogs.action,
+          metadata: auditLogs.metadata,
+          createdAt: auditLogs.createdAt,
+          userId: users.id,
+          userFullName: users.fullName,
+          userEmail: users.email,
+        })
+        .from(auditLogs)
+        .leftJoin(users, eq(auditLogs.userId, users.id))
+        .where(inArray(auditLogs.userId, tenantUserIds))
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(5)
+        .execute()
       : []
 
     return NextResponse.json({
