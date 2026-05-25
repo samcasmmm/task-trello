@@ -36,15 +36,6 @@ export async function GET(
       .execute()
     const totalProjects = Number(projectCountRow?.count ?? 0)
 
-    // 2. Fetch project ids in this tenant
-    const projectList = await db
-      .select({ id: projects.id })
-      .from(projects)
-      .where(eq(projects.tenantId, tenantId))
-      .execute()
-    const projectIds = projectList.map((p) => p.id)
-
-    // Standard fallback counts if no projects exist
     let totalTasks = 0
     let tasksDueToday = 0
     let overdueTasks = 0
@@ -53,36 +44,39 @@ export async function GET(
     let tasksByPriority: { priority: string; count: number }[] = []
     let completionTrend: { name: string; completed: number; created: number }[] = []
 
-    const startOfToday = new Date()
+    const now = new Date()
+    const startOfToday = new Date(now)
     startOfToday.setHours(0, 0, 0, 0)
-    const endOfToday = new Date()
+    const endOfToday = new Date(now)
     endOfToday.setHours(23, 59, 59, 999)
     const startOfTodayIso = startOfToday.toISOString()
     const endOfTodayIso = endOfToday.toISOString()
 
-    if (projectIds.length > 0) {
-      // Total Tasks
-      const [taskCountRow] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(tasks)
-        .where(
-          and(
-            inArray(tasks.projectId, projectIds),
-            isNull(tasks.deletedAt)
-          )
-        )
-        .execute()
-      totalTasks = Number(taskCountRow?.count ?? 0)
+    const taskFilter = and(
+      eq(projects.tenantId, tenantId),
+      isNull(tasks.deletedAt)
+    )
 
+    // Total Tasks
+    const [taskCountRow] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(tasks)
+      .innerJoin(projects, eq(tasks.projectId, projects.id))
+      .where(taskFilter)
+      .execute()
+    totalTasks = Number(taskCountRow?.count ?? 0)
+
+    if (totalTasks > 0) {
       // Tasks Due Today
       const [dueTodayRow] = await db
         .select({ count: sql<number>`count(*)` })
         .from(tasks)
+        .innerJoin(projects, eq(tasks.projectId, projects.id))
         .where(
           and(
-            inArray(tasks.projectId, projectIds),
-            isNull(tasks.deletedAt),
-            sql`${tasks.dueDate} >= ${startOfTodayIso} AND ${tasks.dueDate} <= ${endOfTodayIso}`
+            taskFilter,
+            sql`${tasks.dueDate} >= ${startOfTodayIso}`,
+            sql`${tasks.dueDate} <= ${endOfTodayIso}`
           )
         )
         .execute()
@@ -92,10 +86,10 @@ export async function GET(
       const [overdueRow] = await db
         .select({ count: sql<number>`count(*)` })
         .from(tasks)
+        .innerJoin(projects, eq(tasks.projectId, projects.id))
         .where(
           and(
-            inArray(tasks.projectId, projectIds),
-            isNull(tasks.deletedAt),
+            taskFilter,
             sql`${tasks.dueDate} < ${startOfTodayIso}`,
             sql`${tasks.status} != 'done'`
           )
@@ -107,12 +101,9 @@ export async function GET(
       const [completedRow] = await db
         .select({ count: sql<number>`count(*)` })
         .from(tasks)
+        .innerJoin(projects, eq(tasks.projectId, projects.id))
         .where(
-          and(
-            inArray(tasks.projectId, projectIds),
-            isNull(tasks.deletedAt),
-            eq(tasks.status, 'done')
-          )
+          and(taskFilter, eq(tasks.status, 'done'))
         )
         .execute()
       completedTasks = Number(completedRow?.count ?? 0)
@@ -121,12 +112,8 @@ export async function GET(
       const statusRows = await db
         .select({ status: tasks.status, count: sql<number>`count(*)` })
         .from(tasks)
-        .where(
-          and(
-            inArray(tasks.projectId, projectIds),
-            isNull(tasks.deletedAt)
-          )
-        )
+        .innerJoin(projects, eq(tasks.projectId, projects.id))
+        .where(taskFilter)
         .groupBy(tasks.status)
         .execute()
       tasksByStatus = statusRows.map((r) => ({ status: r.status, count: Number(r.count) }))
@@ -135,63 +122,80 @@ export async function GET(
       const priorityRows = await db
         .select({ priority: tasks.priority, count: sql<number>`count(*)` })
         .from(tasks)
-        .where(
-          and(
-            inArray(tasks.projectId, projectIds),
-            isNull(tasks.deletedAt)
-          )
-        )
+        .innerJoin(projects, eq(tasks.projectId, projects.id))
+        .where(taskFilter)
         .groupBy(tasks.priority)
         .execute()
       tasksByPriority = priorityRows.map((r) => ({ priority: r.priority, count: Number(r.count) }))
 
-      // 7-day completion trend (last 7 calendar days)
+      const sevenDaysAgo = new Date(startOfToday)
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+      const sevenDaysAgoIso = sevenDaysAgo.toISOString()
+
+      const createdTrendRows = await db
+        .select({
+          day: sql<Date>`date_trunc('day', ${tasks.createdAt})`,
+          count: sql<number>`count(*)`,
+        })
+        .from(tasks)
+        .innerJoin(projects, eq(tasks.projectId, projects.id))
+        .where(
+          and(
+            taskFilter,
+            sql`${tasks.createdAt} >= ${sevenDaysAgoIso}`,
+            sql`${tasks.createdAt} <= ${endOfTodayIso}`
+          )
+        )
+        .groupBy(sql`date_trunc('day', ${tasks.createdAt})`)
+        .orderBy(sql`date_trunc('day', ${tasks.createdAt})`)
+        .execute()
+
+      const completedTrendRows = await db
+        .select({
+          day: sql<Date>`date_trunc('day', ${tasks.updatedAt})`,
+          count: sql<number>`count(*)`,
+        })
+        .from(tasks)
+        .innerJoin(projects, eq(tasks.projectId, projects.id))
+        .where(
+          and(
+            taskFilter,
+            eq(tasks.status, 'done'),
+            sql`${tasks.updatedAt} >= ${sevenDaysAgoIso}`,
+            sql`${tasks.updatedAt} <= ${endOfTodayIso}`
+          )
+        )
+        .groupBy(sql`date_trunc('day', ${tasks.updatedAt})`)
+        .orderBy(sql`date_trunc('day', ${tasks.updatedAt})`)
+        .execute()
+
+      const createdMap = new Map(
+        createdTrendRows.map((row) => [
+          new Date(row.day).toISOString().slice(0, 10),
+          Number(row.count),
+        ])
+      )
+      const completedMap = new Map(
+        completedTrendRows.map((row) => [
+          new Date(row.day).toISOString().slice(0, 10),
+          Number(row.count),
+        ])
+      )
+
       const trendData = []
       for (let i = 6; i >= 0; i--) {
-        const d = new Date()
+        const d = new Date(startOfToday)
         d.setDate(d.getDate() - i)
-        d.setHours(0, 0, 0, 0)
-
-        const start = new Date(d)
-        const end = new Date(d)
-        end.setHours(23, 59, 59, 999)
-        const startIso = start.toISOString()
-        const endIso = end.toISOString()
-
-        // Count created on this day
-        const [createdRow] = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(tasks)
-          .where(
-            and(
-              inArray(tasks.projectId, projectIds),
-              isNull(tasks.deletedAt),
-              sql`${tasks.createdAt} >= ${startIso} AND ${tasks.createdAt} <= ${endIso}`
-            )
-          )
-          .execute()
-
-        // Count completed on this day (updated to done)
-        const [completedTrendRow] = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(tasks)
-          .where(
-            and(
-              inArray(tasks.projectId, projectIds),
-              isNull(tasks.deletedAt),
-              eq(tasks.status, 'done'),
-              sql`${tasks.updatedAt} >= ${startIso} AND ${tasks.updatedAt} <= ${endIso}`
-            )
-          )
-          .execute()
-
+        const key = d.toISOString().slice(0, 10)
         const dayName = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })
+
         trendData.push({
           name: dayName,
-          created: Number(createdRow?.count ?? 0),
-          completed: Number(completedTrendRow?.count ?? 0),
+          created: createdMap.get(key) ?? 0,
+          completed: completedMap.get(key) ?? 0,
         })
       }
+
       completionTrend = trendData
     }
 
