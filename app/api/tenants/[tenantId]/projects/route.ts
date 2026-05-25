@@ -19,7 +19,15 @@ export async function GET(
     }
 
     const projectsList = await db
-      .select()
+      .select({
+        id: projects.id,
+        tenantId: projects.tenantId,
+        name: projects.name,
+        description: projects.description,
+        color: projects.color,
+        createdAt: projects.createdAt,
+        updatedAt: projects.updatedAt,
+      })
       .from(projects)
       .where(eq(projects.tenantId, tenantId))
       .orderBy(desc(projects.createdAt))
@@ -27,6 +35,7 @@ export async function GET(
 
     return NextResponse.json(projectsList)
   } catch (error: any) {
+    console.error('Tenant projects API error:', error)
     return NextResponse.json(
       { error: error.message },
       { status: error.message === 'Unauthorized' ? 401 : 500 }
