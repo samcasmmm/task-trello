@@ -2,6 +2,28 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, verifyTenantAccess, verifyTenantRole } from '@/lib/api-auth'
 import db, { projects, tasks, customFields, eq, sql } from '@/lib/drizzle'
 
+async function getProjectById(projectId: string) {
+  const [project] = await db
+    .select({
+      id: projects.id,
+      tenantId: projects.tenantId,
+      name: projects.name,
+      description: projects.description,
+      color: projects.color,
+      icon: projects.icon,
+      status: projects.status,
+      createdById: projects.createdById,
+      createdAt: projects.createdAt,
+      updatedAt: projects.updatedAt,
+    })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1)
+    .execute()
+
+  return project
+}
+
 /**
  * GET /api/projects/[projectId] - Get project details
  */
@@ -13,9 +35,7 @@ export async function GET(
     const authContext = await requireAuth()
     const { projectId } = await params
 
-    const project = await db.query.projects.findFirst({
-      where: eq(projects.id, projectId),
-    })
+    const project = await getProjectById(projectId)
 
     if (!project) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })

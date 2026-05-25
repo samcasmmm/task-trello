@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const [project] = await db
+    const results = await db
       .insert(projects)
       .values({
         id: crypto.randomUUID(),
@@ -34,15 +34,22 @@ export async function POST(request: NextRequest) {
         color: color || '#3B82F6',
         icon: icon || 'folder',
         createdById: authContext.userId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       })
       .returning()
 
+    const project = results[0]
+    if (!project) {
+      return NextResponse.json(
+        { error: 'Failed to create project' },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(project, { status: 201 })
   } catch (error: any) {
+    console.error('Create project error:', error)
     return NextResponse.json(
-      { error: error.message },
+      { error: error.message || 'Internal server error' },
       { status: error.message === 'Unauthorized' ? 401 : 500 }
     )
   }

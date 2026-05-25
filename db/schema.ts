@@ -59,7 +59,12 @@ export const projects = pgTable('projects', {
    createdAt: timestamp('createdAt').defaultNow().notNull(),
    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
    deletedAt: timestamp('deletedAt'),
-})
+},
+   (project) => ({
+      tenantIdIndex: index('projects_tenantId_idx').on(project.tenantId),
+      statusIndex: index('projects_status_idx').on(project.status),
+   })
+)
 
 export const tasks = pgTable('tasks', {
    id: text('id').primaryKey(),
@@ -79,7 +84,18 @@ export const tasks = pgTable('tasks', {
    createdAt: timestamp('createdAt').defaultNow().notNull(),
    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
    deletedAt: timestamp('deletedAt'),
-})
+},
+   (task) => ({
+      projectIdIndex: index('tasks_projectId_idx').on(task.projectId),
+      statusIndex: index('tasks_status_idx').on(task.status),
+      priorityIndex: index('tasks_priority_idx').on(task.priority),
+      dueDateIndex: index('tasks_dueDate_idx').on(task.dueDate),
+      createdAtIndex: index('tasks_createdAt_idx').on(task.createdAt),
+      updatedAtIndex: index('tasks_updatedAt_idx').on(task.updatedAt),
+      deletedAtIndex: index('tasks_deletedAt_idx').on(task.deletedAt),
+      assignedToIdIndex: index('tasks_assignedToId_idx').on(task.assignedToId),
+   })
+)
 
 export const taskChecklist = pgTable('task_checklists', {
    id: text('id').primaryKey(),
