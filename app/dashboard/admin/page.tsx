@@ -190,18 +190,18 @@ export default function AdminPage() {
                 Add Platform User
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-slate-900 border border-slate-800 text-slate-100 shadow-none rounded">
+            <DialogContent className="sm:max-w-[425px] bg-gray-900 border border-gray-800 text-gray-100 shadow-none rounded">
               <DialogHeader>
-                <DialogTitle className="text-slate-100 font-bold">
+                <DialogTitle className="text-gray-100 font-bold">
                   Register Platform User
                 </DialogTitle>
-                <DialogDescription className="text-slate-400">
+                <DialogDescription className="text-gray-400">
                   Register a new platform-wide user and configure their initial access role.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateUser} className="space-y-4 py-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
                     Full Name
                   </label>
                   <Input
@@ -209,11 +209,11 @@ export default function AdminPage() {
                     placeholder="Jane Doe"
                     value={newUser.fullName}
                     onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
-                    className="bg-slate-950/80 border-slate-800 focus-visible:ring-slate-700/50 text-slate-200 h-9 text-xs rounded-sm placeholder:text-slate-600"
+                    className="bg-gray-950/80 border-gray-800 focus-visible:ring-gray-700/50 text-gray-200 h-9 text-xs rounded-sm placeholder:text-gray-600"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
                     Email Address
                   </label>
                   <Input
@@ -222,11 +222,11 @@ export default function AdminPage() {
                     placeholder="jane@example.com"
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                    className="bg-slate-950/80 border-slate-800 focus-visible:ring-slate-700/50 text-slate-200 h-9 text-xs rounded-sm placeholder:text-slate-600"
+                    className="bg-gray-950/80 border-gray-800 focus-visible:ring-gray-700/50 text-gray-200 h-9 text-xs rounded-sm placeholder:text-gray-600"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
                     Password
                   </label>
                   <Input
@@ -235,26 +235,26 @@ export default function AdminPage() {
                     placeholder="••••••••"
                     value={newUser.password}
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                    className="bg-slate-950/80 border-slate-800 focus-visible:ring-slate-700/50 text-slate-200 h-9 text-xs rounded-sm placeholder:text-slate-600"
+                    className="bg-gray-950/80 border-gray-800 focus-visible:ring-gray-700/50 text-gray-200 h-9 text-xs rounded-sm placeholder:text-gray-600"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
                     System Role
                   </label>
                   <Select
                     value={newUser.roleId}
                     onValueChange={(val) => setNewUser({ ...newUser, roleId: val })}
                   >
-                    <SelectTrigger className="bg-slate-950/80 border-slate-800 focus:ring-slate-700 text-xs h-9 text-slate-200 rounded-sm">
+                    <SelectTrigger className="bg-gray-950/80 border-gray-800 focus:ring-gray-700 text-xs h-9 text-gray-200 rounded-sm">
                       <SelectValue placeholder="Select system role" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 rounded-sm shadow-none">
+                    <SelectContent className="bg-gray-900 border-gray-800 text-gray-100 rounded-sm shadow-none">
                       {systemRoles.map((r) => (
                         <SelectItem
                           key={r.id}
                           value={r.id}
-                          className="text-xs capitalize hover:bg-slate-800"
+                          className="text-xs capitalize hover:bg-gray-800"
                         >
                           {r.name}
                         </SelectItem>
@@ -323,7 +323,7 @@ export default function AdminPage() {
         <TabsContent value="users">
           <Card className="rounded-lg overflow-hidden bg-surface-2 border border-border-subtle shadow-none">
             <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
-              <CardTitle className="text-sm font-bold text-slate-300">User Directory</CardTitle>
+              <CardTitle className="text-sm font-bold text-gray-300">User Directory</CardTitle>
               <CardDescription className="text-xs text-foreground-dim">
                 Assign system-level permissions and roles. Demoting, upgrading, and deleting user
                 accounts takes effect instantly.
@@ -354,7 +354,7 @@ export default function AdminPage() {
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-9 w-9">
                                   <AvatarImage src={u.avatarUrl || ''} />
-                                  <AvatarFallback className="bg-surface-3 text-slate-200 font-bold text-xs">
+                                  <AvatarFallback className="bg-surface-3 text-gray-200 font-bold text-xs">
                                     {u.fullName?.substring(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
@@ -372,12 +372,12 @@ export default function AdminPage() {
                                 <SelectTrigger className="w-44 bg-surface-3 border-border-default text-xs h-8 text-foreground-muted rounded-sm">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 rounded-sm shadow-none">
+                                <SelectContent className="bg-gray-900 border-gray-800 text-gray-100 rounded-sm shadow-none">
                                   {systemRoles.map((role) => (
                                     <SelectItem
                                       key={role.id}
                                       value={role.id}
-                                      className="text-xs capitalize hover:bg-slate-800"
+                                      className="text-xs capitalize hover:bg-gray-800"
                                     >
                                       {role.name}
                                     </SelectItem>
@@ -414,9 +414,7 @@ export default function AdminPage() {
         <TabsContent value="tenants">
           <Card className="rounded-lg overflow-hidden bg-surface-2 border border-border-subtle shadow-none">
             <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
-              <CardTitle className="text-sm font-bold text-slate-300">
-                Platform Workspaces
-              </CardTitle>
+              <CardTitle className="text-sm font-bold text-gray-300">Platform Workspaces</CardTitle>
               <CardDescription className="text-xs text-foreground-dim">
                 Overview of tenant organizations hosted on this engine, including member counts and
                 project pipelines.
@@ -436,9 +434,9 @@ export default function AdminPage() {
                     >
                       <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-rose-500 to-amber-500" />
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-bold flex items-center justify-between text-slate-200">
+                        <CardTitle className="text-sm font-bold flex items-center justify-between text-gray-200">
                           {t.name}
-                          <Badge className="text-[9px] bg-slate-800 border border-slate-700 text-slate-300 font-mono shadow-none uppercase font-bold py-0.5 px-1.5">
+                          <Badge className="text-[9px] bg-gray-800 border border-gray-700 text-gray-300 font-mono shadow-none uppercase font-bold py-0.5 px-1.5">
                             {t.slug}
                           </Badge>
                         </CardTitle>
@@ -449,19 +447,19 @@ export default function AdminPage() {
                       <CardContent className="pt-2 text-xs text-foreground-muted space-y-2">
                         <div className="flex justify-between border-b border-border-subtle pb-1">
                           <span>Team size</span>
-                          <span className="font-semibold text-slate-200">
+                          <span className="font-semibold text-gray-200">
                             {t.memberCount} members
                           </span>
                         </div>
                         <div className="flex justify-between border-b border-border-subtle pb-1">
                           <span>Active Projects</span>
-                          <span className="font-semibold text-slate-200">
+                          <span className="font-semibold text-gray-200">
                             {t.projectCount} projects
                           </span>
                         </div>
                         <div className="flex justify-between pt-1">
                           <span>Tenant ID</span>
-                          <span className="font-mono text-[10px] text-slate-500">{t.id}</span>
+                          <span className="font-mono text-[10px] text-gray-500">{t.id}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -480,7 +478,7 @@ export default function AdminPage() {
         <TabsContent value="logs">
           <Card className="rounded-lg overflow-hidden bg-surface-2 border border-border-subtle shadow-none">
             <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
-              <CardTitle className="text-sm font-bold text-slate-300">
+              <CardTitle className="text-sm font-bold text-gray-300">
                 System Operations Audit History
               </CardTitle>
               <CardDescription className="text-xs text-foreground-dim">
@@ -514,20 +512,20 @@ export default function AdminPage() {
                           </td>
                           <td className="py-3 px-4 text-foreground-muted font-medium">
                             <div>
-                              <div className="font-semibold text-slate-200">
+                              <div className="font-semibold text-gray-200">
                                 {l.userFullName || 'System'}
                               </div>
-                              <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                              <div className="text-[10px] text-gray-500 font-mono mt-0.5">
                                 {l.userEmail}
                               </div>
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <pre className="text-[10px] text-slate-400 font-mono bg-slate-950/40 border border-border-subtle p-2 rounded max-w-sm truncate overflow-x-auto">
+                            <pre className="text-[10px] text-gray-400 font-mono bg-gray-950/40 border border-border-subtle p-2 rounded max-w-sm truncate overflow-x-auto">
                               {JSON.stringify(l.metadata || {}, null, 2)}
                             </pre>
                           </td>
-                          <td className="py-3 px-4 text-right text-slate-500 font-mono text-[10px]">
+                          <td className="py-3 px-4 text-right text-gray-500 font-mono text-[10px]">
                             {new Date(l.createdAt).toLocaleString()}
                           </td>
                         </tr>

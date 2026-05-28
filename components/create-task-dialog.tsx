@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,11 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import WysiwygEditor from './wysiwyg-editor';
 import api from '@/lib/axios';
 
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
+
+interface TeamMember {
+  userId: string;
+  email: string;
+  fullName: string;
+  avatarUrl?: string;
+  role?: string;
+}
 
 interface CreateTaskDialogProps {
   projectId?: string;
@@ -39,6 +48,7 @@ export default function CreateTaskDialog({
 }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -46,7 +56,35 @@ export default function CreateTaskDialog({
     startDate: '',
     dueDate: '',
     estimatedHours: '',
+    assignedToId: '__unassigned__',
   });
+
+  // Fetch workspace members when dialog opens
+  useEffect(() => {
+    if (!open || !projectId) return;
+
+    const fetchMembers = async () => {
+      try {
+        // Get the project to find its tenantId
+        const projectRes = await api.get(`/api/projects/${projectId}`);
+        const tenantId = projectRes.data?.tenantId;
+        if (!tenantId) return;
+
+        const membersRes = await api.get(`/api/tenants/${tenantId}/members`);
+        const members = membersRes.data.map((m: any) => ({
+          userId: m.user?.id || m.userId,
+          email: m.user?.email || m.email,
+          fullName: m.user?.fullName || m.fullName,
+          avatarUrl: m.user?.avatarUrl || m.avatarUrl,
+          role: m.role,
+        }));
+        setTeamMembers(members);
+      } catch (error) {
+        console.error('Failed to fetch team members:', error);
+      }
+    };
+    fetchMembers();
+  }, [open, projectId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +100,7 @@ export default function CreateTaskDialog({
         startDate: formData.startDate || null,
         dueDate: formData.dueDate || null,
         estimatedHours: formData.estimatedHours || null,
+        assignedToId: formData.assignedToId === '__unassigned__' ? null : formData.assignedToId,
       });
 
       const task = response.data;
@@ -74,6 +113,7 @@ export default function CreateTaskDialog({
         startDate: '',
         dueDate: '',
         estimatedHours: '',
+        assignedToId: '__unassigned__',
       });
       onSuccess?.(task);
     } catch (error: any) {
@@ -122,6 +162,13 @@ export default function CreateTaskDialog({
               onChange={(val) => setFormData({ ...formData, description: val })}
               placeholder="Add more details about this task..."
               minHeight="100px"
+              members={teamMembers.map((m) => ({
+                userId: m.userId,
+                fullName: m.fullName || m.email,
+                email: m.email,
+                avatarUrl: m.avatarUrl,
+                role: m.role,
+              }))}
             />
           </div>
 
@@ -163,6 +210,66 @@ export default function CreateTaskDialog({
                 className="bg-surface-3 border-border-default focus-visible:ring-border-strong text-foreground h-9 text-xs rounded-md placeholder:text-foreground-dim/30"
               />
             </div>
+          </div>
+
+          {/* Assignee selector */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground-dim mb-1">
+              Assign To
+            </label>
+            <Select
+              value={formData.assignedToId}
+              onValueChange={(value) => setFormData({ ...formData, assignedToId: value })}
+            >
+              <SelectTrigger className="bg-surface-3 border-border-default focus:ring-border-strong text-xs h-9 text-foreground-muted rounded-md">
+                {formData.assignedToId && formData.assignedToId !== '__unassigned__' ? (
+                  (() => {
+                    const member = teamMembers.find((m) => m.userId === formData.assignedToId);
+                    return member ? (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-4 w-4 rounded-sm">
+                          <AvatarImage src={member.avatarUrl || ''} />
+                          <AvatarFallback className="text-[10px] font-bold rounded-sm bg-surface-1 text-foreground-dim">
+                            {member.fullName?.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs font-medium text-foreground-muted">
+                          {member.fullName}
+                        </span>
+                      </div>
+                    ) : (
+                      <SelectValue />
+                    );
+                  })()
+                ) : (
+                  <span className="text-xs text-foreground-dim/70">Select team member...</span>
+                )}
+              </SelectTrigger>
+              <SelectContent className="bg-surface-2 border border-border-default text-foreground rounded-md shadow-none">
+                <SelectItem value="__unassigned__" className="text-xs text-foreground-dim">
+                  Unassigned
+                </SelectItem>
+                {teamMembers.map((member) => (
+                  <SelectItem
+                    key={member.userId}
+                    value={member.userId}
+                    className="text-xs focus:bg-surface-3 focus:text-foreground"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-4 w-4 rounded-sm">
+                        <AvatarImage src={member.avatarUrl || ''} />
+                        <AvatarFallback className="text-[10px] bg-surface-1 text-foreground-dim rounded-sm">
+                          {member.fullName?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-foreground-muted">
+                        {member.fullName || member.email}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

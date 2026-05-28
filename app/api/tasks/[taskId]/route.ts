@@ -192,6 +192,7 @@ export async function GET(
 
     return NextResponse.json({
       ...task,
+      tenantId: project.tenantId,
       project_id: task.projectId,
       assignedTo: assignedTo
         ? {
@@ -294,6 +295,17 @@ export async function PATCH(
       estimatedHours,
       actualHours,
     } = body;
+
+    // Check assignment permission if assignee is being changed
+    if (assignedToId !== undefined && assignedToId !== task.assignedToId) {
+      const canAssign = await canAssignTasks(authContext.userId, project.tenantId);
+      if (!canAssign) {
+        return NextResponse.json(
+          { error: 'You do not have permission to assign tasks' },
+          { status: 403 },
+        );
+      }
+    }
 
     const [updated] = await db
       .update(tasks)

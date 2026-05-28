@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
+import QueryProvider from '@/components/query-provider';
 import './globals.css';
 
 const _geist = Geist({ subsets: ['latin'] });
@@ -35,10 +36,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark bg-slate-950 text-slate-100">
-      <body className="font-sans antialiased bg-slate-950 text-slate-100">
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+    <html lang="en" className="dark bg-gray-950 text-gray-100">
+      <body className="font-sans antialiased bg-gray-950 text-gray-100">
+        <QueryProvider>
+          {children}
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+        </QueryProvider>
       </body>
     </html>
   );

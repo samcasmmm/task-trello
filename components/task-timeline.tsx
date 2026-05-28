@@ -24,9 +24,9 @@ export default function TaskTimeline({ tasks = [] }: TaskTimelineProps) {
     return (
       <Card className="rounded-lg py-16 text-center bg-surface-2 border border-border-subtle">
         <CardContent className="p-6">
-          <CalendarDays className="w-8 h-8 mx-auto mb-3 text-slate-500" />
-          <h3 className="text-sm font-bold mb-1 text-slate-300">No Tasks with Dates</h3>
-          <p className="text-xs text-slate-500 max-w-xs mx-auto">
+          <CalendarDays className="w-8 h-8 mx-auto mb-3 text-gray-500" />
+          <h3 className="text-sm font-bold mb-1 text-gray-300">No Tasks with Dates</h3>
+          <p className="text-xs text-gray-500 max-w-xs mx-auto">
             Give tasks a start and due date to view them inside a project Gantt timeline chart.
           </p>
         </CardContent>
@@ -51,7 +51,7 @@ export default function TaskTimeline({ tasks = [] }: TaskTimelineProps) {
       <CardContent className="p-4 overflow-x-auto">
         <div className="min-w-[800px] space-y-4">
           {/* Header timeline indicators */}
-          <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-slate-500 pb-2 border-b border-border-subtle">
+          <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-gray-500 pb-2 border-b border-border-subtle">
             <div className="w-1/4">Task Description</div>
             <div className="w-3/4 flex justify-between px-2 font-mono">
               <span>{formatDate(new Date(minTime))}</span>
@@ -74,7 +74,7 @@ export default function TaskTimeline({ tasks = [] }: TaskTimelineProps) {
 
               return (
                 <div key={t.id} className="flex items-center text-xs">
-                  <div className="w-1/4 pr-4 font-semibold text-slate-200 truncate">
+                  <div className="w-1/4 pr-4 font-semibold text-gray-200 truncate">
                     <Link
                       href={`/dashboard/task/${t.id}`}
                       className="hover:underline hover:text-white"
@@ -91,9 +91,7 @@ export default function TaskTimeline({ tasks = [] }: TaskTimelineProps) {
                       }}
                       title={`${t.title}: ${formatDate(String(start))} to ${formatDate(String(end))}`}
                     >
-                      <span className="text-[9px] font-bold text-slate-300 truncate">
-                        {t.title}
-                      </span>
+                      <span className="text-[9px] font-bold text-gray-300 truncate">{t.title}</span>
                     </div>
                   </div>
                 </div>

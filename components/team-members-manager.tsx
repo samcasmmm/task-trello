@@ -34,6 +34,7 @@ import {
   GitMerge,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
 interface TeamMember {
@@ -58,16 +59,32 @@ interface WorkspaceRole {
 
 const ROLE_COLORS: Record<string, string> = {
   owner: 'bg-purple-100 text-purple-800 border border-purple-200 shadow-sm',
-  admin: 'bg-slate-800 text-slate-200 border border-slate-700 shadow-sm',
+  admin: 'bg-gray-800 text-gray-200 border border-gray-700 shadow-sm',
   member: 'bg-green-100 text-green-800 border border-green-200 shadow-sm',
-  viewer: 'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm',
+  viewer: 'bg-gray-100 text-gray-800 border border-gray-200 shadow-sm',
 };
 
 export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [availableRoles, setAvailableRoles] = useState<WorkspaceRole[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  // Queries
+  const { data: teamMembers = [], isLoading: membersLoading } = useQuery({
+    queryKey: ['tenant-members', tenantId],
+    queryFn: async () => {
+      const res = await api.get(`/api/tenants/${tenantId}/members`);
+      return res.data as TeamMember[];
+    },
+  });
+
+  const { data: availableRoles = [], isLoading: rolesLoading } = useQuery({
+    queryKey: ['tenant-roles', tenantId],
+    queryFn: async () => {
+      const res = await api.get(`/api/tenants/${tenantId}/roles`);
+      return res.data as WorkspaceRole[];
+    },
+  });
+
+  const loading = membersLoading || rolesLoading;
 
   // Invite states
   const [inviteEmail, setInviteEmail] = useState('');
@@ -85,86 +102,39 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
   });
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const fetchMembersAndRoles = async () => {
-    try {
-      const [membersRes, rolesRes] = await Promise.all([
-        api.get(`/api/tenants/${tenantId}/members`),
-        api.get(`/api/tenants/${tenantId}/roles`),
-      ]);
-
-      setTeamMembers(membersRes.data);
-      setAvailableRoles(rolesRes.data);
-    } catch (error) {
-      console.error('Error loading team manager:', error);
-      toast.error('Failed to load team data.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMembersAndRoles();
-  }, [tenantId]);
-
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteEmail.trim()) {
-      toast.error('Email is required.');
-      return;
-    }
-
-    setActionLoading('invite');
-    try {
-      const response = await api.post(`/api/tenants/${tenantId}/members`, {
-        email: inviteEmail.trim(),
-        role: inviteRole,
-        reportsToId: inviteReportsTo === '__none__' ? null : inviteReportsTo,
-      });
-
-      const result = response.data;
-
+  // Mutations
+  const inviteMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await api.post(`/api/tenants/${tenantId}/members`, data);
+      return res.data;
+    },
+    onSuccess: (result, variables) => {
       if (result.isAutoCreated) {
         toast.success(
-          `Account created and invited: ${inviteEmail}. Temporary password: Welcome123!`,
-          {
-            duration: 8000,
-          },
+          `Account created and invited: ${variables.email}. Temporary password: Welcome123!`,
+          { duration: 8000 },
         );
       } else {
-        toast.success(`Successfully added ${inviteEmail} to workspace.`);
+        toast.success(`Successfully added ${variables.email} to workspace.`);
       }
-
       setInviteEmail('');
       setInviteRole('member');
       setInviteReportsTo('__none__');
       setShowInviteDialog(false);
-      fetchMembersAndRoles();
-    } catch (error: any) {
+      queryClient.invalidateQueries({ queryKey: ['tenant-members', tenantId] });
+    },
+    onError: (error: any) => {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to invite user.';
       toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
-  };
+    },
+  });
 
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!createForm.fullName || !createForm.email || !createForm.password) {
-      toast.error('Name, email and password are required.');
-      return;
-    }
-
-    setActionLoading('create');
-    try {
-      await api.post(`/api/tenants/${tenantId}/members`, {
-        email: createForm.email,
-        fullName: createForm.fullName,
-        password: createForm.password,
-        role: createForm.role,
-        reportsToId: createForm.reportsToId === '__none__' ? null : createForm.reportsToId,
-      });
-
-      toast.success(`Registered and added ${createForm.fullName} to team!`);
+  const createUserMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await api.post(`/api/tenants/${tenantId}/members`, data);
+    },
+    onSuccess: (_, variables) => {
+      toast.success(`Registered and added ${variables.fullName} to team!`);
       setCreateForm({
         fullName: '',
         email: '',
@@ -173,70 +143,114 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
         reportsToId: '__none__',
       });
       setShowCreateDialog(false);
-      fetchMembersAndRoles();
-    } catch (error: any) {
+      queryClient.invalidateQueries({ queryKey: ['tenant-members', tenantId] });
+    },
+    onError: (error: any) => {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to create user.';
       toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
-  };
+    },
+  });
 
-  const handleRoleChange = async (memberId: string, newRole: string) => {
-    setActionLoading(memberId);
-    try {
-      await api.patch(`/api/tenants/${tenantId}/members/${memberId}`, { role: newRole });
+  const roleChangeMutation = useMutation({
+    mutationFn: async ({ memberId, role }: { memberId: string; role: string }) => {
+      await api.patch(`/api/tenants/${tenantId}/members/${memberId}`, { role });
+    },
+    onSuccess: () => {
       toast.success('Member role updated.');
-      fetchMembersAndRoles();
-    } catch (error: any) {
+      queryClient.invalidateQueries({ queryKey: ['tenant-members', tenantId] });
+    },
+    onError: (error: any) => {
       const errorMessage = error.response?.data?.error || error.message || 'Role change failed.';
       toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
-  };
+    },
+  });
 
-  const handleManagerChange = async (memberId: string, newManagerUserId: string) => {
-    setActionLoading(memberId);
-    try {
-      await api.patch(`/api/tenants/${tenantId}/members/${memberId}`, {
-        reportsToId: newManagerUserId === '__none__' ? null : newManagerUserId,
-      });
-
+  const managerChangeMutation = useMutation({
+    mutationFn: async ({
+      memberId,
+      reportsToId,
+    }: {
+      memberId: string;
+      reportsToId: string | null;
+    }) => {
+      await api.patch(`/api/tenants/${tenantId}/members/${memberId}`, { reportsToId });
+    },
+    onSuccess: () => {
       toast.success('Reporting line updated.');
-      fetchMembersAndRoles();
-    } catch (error: any) {
+      queryClient.invalidateQueries({ queryKey: ['tenant-members', tenantId] });
+    },
+    onError: (error: any) => {
       const errorMessage = error.response?.data?.error || error.message || 'Manager change failed.';
       toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
-  };
+    },
+  });
 
-  const handleRemoveMember = async (memberId: string, name: string) => {
-    if (!confirm(`Are you sure you want to remove ${name} from this workspace?`)) {
-      return;
-    }
-
-    setActionLoading(memberId);
-    try {
+  const removeMemberMutation = useMutation({
+    mutationFn: async (memberId: string) => {
       await api.delete(`/api/tenants/${tenantId}/members/${memberId}`);
-
-      toast.success(`${name} removed successfully.`);
-      fetchMembersAndRoles();
-    } catch (error: any) {
+    },
+    onSuccess: (_, memberId, context: any) => {
+      toast.success(`${context?.name || 'Member'} removed successfully.`);
+      queryClient.invalidateQueries({ queryKey: ['tenant-members', tenantId] });
+    },
+    onError: (error: any) => {
       const errorMessage =
         error.response?.data?.error || error.message || 'Failed to remove member.';
       toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
+    },
+  });
+
+  // Handlers
+  const handleInvite = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) {
+      toast.error('Email is required.');
+      return;
     }
+    inviteMutation.mutate({
+      email: inviteEmail.trim(),
+      role: inviteRole,
+      reportsToId: inviteReportsTo === '__none__' ? null : inviteReportsTo,
+    });
+  };
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createForm.fullName || !createForm.email || !createForm.password) {
+      toast.error('Name, email and password are required.');
+      return;
+    }
+    createUserMutation.mutate({
+      email: createForm.email,
+      fullName: createForm.fullName,
+      password: createForm.password,
+      role: createForm.role,
+      reportsToId: createForm.reportsToId === '__none__' ? null : createForm.reportsToId,
+    });
+  };
+
+  const handleRoleChange = (memberId: string, newRole: string) => {
+    roleChangeMutation.mutate({ memberId, role: newRole });
+  };
+
+  const handleManagerChange = (memberId: string, newManagerUserId: string) => {
+    managerChangeMutation.mutate({
+      memberId,
+      reportsToId: newManagerUserId === '__none__' ? null : newManagerUserId,
+    });
+  };
+
+  const handleRemoveMember = (memberId: string, name: string) => {
+    if (!confirm(`Are you sure you want to remove ${name} from this workspace?`)) {
+      return;
+    }
+    removeMemberMutation.mutate(memberId, { context: { name } });
   };
 
   if (loading) {
     return (
-      <div className="py-12 text-center text-slate-500">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-900 border-t-transparent mx-auto mb-3" />
+      <div className="py-12 text-center text-gray-500">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-900 border-t-transparent mx-auto mb-3" />
         <p className="text-sm">Loading team directory...</p>
       </div>
     );
@@ -247,11 +261,11 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
       {/* Header Panel */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-5">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Users className="w-6 h-6 text-slate-600" />
+          <h2 className="text-2xl font-bold text-gray-100 flex items-center gap-2">
+            <Users className="w-6 h-6 text-gray-100" />
             Workspace Directory
           </h2>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-gray-300 mt-1">
             Manage workspace memberships, custom roles, and visual reporting structures
           </p>
         </div>
@@ -260,7 +274,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
           {/* Invite User Dialog */}
           <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
             <DialogTrigger asChild>
-              <Button size="sm" className="bg-slate-900 hover:bg-slate-800">
+              <Button size="sm" className="bg-blue-800 text-white hover:bg-blue-700 cursor-pointer">
                 <Mail className="w-4 h-4 mr-2" />
                 Invite Email
               </Button>
@@ -275,7 +289,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
               </DialogHeader>
               <form onSubmit={handleInvite} className="space-y-4 py-3">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-slate-700">Email Address</label>
+                  <label className="text-sm font-medium text-gray-700">Email Address</label>
                   <Input
                     required
                     type="email"
@@ -286,7 +300,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-slate-700">Role</label>
+                    <label className="text-sm font-medium text-gray-700">Role</label>
                     <Select value={inviteRole} onValueChange={setInviteRole}>
                       <SelectTrigger>
                         <SelectValue />
@@ -301,7 +315,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-slate-700">Reports To</label>
+                    <label className="text-sm font-medium text-gray-700">Reports To</label>
                     <Select value={inviteReportsTo} onValueChange={setInviteReportsTo}>
                       <SelectTrigger>
                         <SelectValue placeholder="No Manager" />
@@ -318,8 +332,8 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                   </div>
                 </div>
                 <DialogFooter className="pt-4">
-                  <Button type="submit" disabled={actionLoading === 'invite'}>
-                    {actionLoading === 'invite' ? 'Inviting...' : 'Send Invitation'}
+                  <Button type="submit" disabled={inviteMutation.isPending}>
+                    {inviteMutation.isPending ? 'Inviting...' : 'Send Invitation'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -329,7 +343,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
           {/* Create User Dialog */}
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" className="cursor-pointer">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Add New User
               </Button>
@@ -344,7 +358,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
               </DialogHeader>
               <form onSubmit={handleCreateUser} className="space-y-4 py-3">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-slate-700">Full Name</label>
+                  <label className="text-sm font-medium text-gray-700">Full Name</label>
                   <Input
                     required
                     placeholder="Jane Smith"
@@ -353,7 +367,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-slate-700">Email Address</label>
+                  <label className="text-sm font-medium text-gray-700">Email Address</label>
                   <Input
                     required
                     type="email"
@@ -363,7 +377,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-slate-700">Password</label>
+                  <label className="text-sm font-medium text-gray-700">Password</label>
                   <Input
                     required
                     type="password"
@@ -374,7 +388,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-slate-700">Role</label>
+                    <label className="text-sm font-medium text-gray-700">Role</label>
                     <Select
                       value={createForm.role}
                       onValueChange={(val) => setCreateForm({ ...createForm, role: val })}
@@ -392,7 +406,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-slate-700">Reports To</label>
+                    <label className="text-sm font-medium text-gray-700">Reports To</label>
                     <Select
                       value={createForm.reportsToId}
                       onValueChange={(val) => setCreateForm({ ...createForm, reportsToId: val })}
@@ -412,8 +426,8 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                   </div>
                 </div>
                 <DialogFooter className="pt-4">
-                  <Button type="submit" disabled={actionLoading === 'create'}>
-                    {actionLoading === 'create' ? 'Creating...' : 'Register User'}
+                  <Button type="submit" disabled={createUserMutation.isPending}>
+                    {createUserMutation.isPending ? 'Creating...' : 'Register User'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -423,58 +437,63 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
       </div>
 
       {/* Team Directory List */}
-      <Card className="border border-slate-200 shadow-sm overflow-hidden bg-white">
-        <CardHeader className="bg-slate-50/50 pb-3 border-b">
-          <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-            <Users className="w-5 h-5 text-slate-500" />
+      <Card className="border border-border-default shadow-sm overflow-hidden p-0 bg-surface-1 gap-0">
+        <CardHeader className="border-b bg-surface-2 flex flex-col items-start justify-center gap-1.5 py-5 px-6">
+          <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
+            <Users className="w-5 h-5 text-foreground-dim" />
             Active Team Members ({teamMembers.length})
           </CardTitle>
-          <CardDescription>
+
+          <CardDescription className="text-xs text-foreground-muted max-w-md">
             Assign system/custom roles, map reporting managers, and manage memberships.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 bg-card">
           {teamMembers.length > 0 ? (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-border-subtle">
               {teamMembers.map((member) => {
                 const manager = teamMembers.find((m) => m.user.id === member.reportsToId);
                 return (
                   <div
                     key={member.id}
-                    className="flex flex-col md:flex-row md:items-center justify-between p-4 gap-4 hover:bg-slate-50/40 transition-colors"
+                    className="flex flex-col md:flex-row md:items-center justify-between p-4 gap-4 hover:bg-surface-1/40 transition-colors"
                   >
                     {/* User profile details */}
                     <div className="flex items-center gap-3 min-w-[240px]">
-                      <Avatar className="h-10 w-10 border border-slate-200">
+                      <Avatar className="h-10 w-10 border border-border-subtle rounded-full">
                         <AvatarImage src={member.user.avatarUrl || ''} />
-                        <AvatarFallback className="bg-slate-100 text-slate-800 font-bold">
+                        <AvatarFallback className="bg-surface-3 text-foreground font-bold">
                           {member.user.fullName?.substring(0, 2).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                        <h4 className="font-bold text-foreground text-sm flex items-center gap-1.5">
                           {member.user.fullName}
                           <Badge
-                            className={`capitalize shadow-none text-[10px] py-0 px-1.5 ${ROLE_COLORS[member.role] || 'bg-slate-100 text-slate-700'}`}
+                            className={`capitalize shadow-none text-[10px] py-0 px-1.5 rounded-sm border-none ${
+                              ROLE_COLORS[member.role] || 'bg-surface-3 text-foreground-muted'
+                            }`}
                           >
                             {member.role.replace(/_/g, ' ')}
                           </Badge>
                         </h4>
-                        <p className="text-xs text-slate-500">{member.user.email}</p>
+                        <p className="text-xs text-foreground-dim">{member.user.email}</p>
                       </div>
                     </div>
 
                     {/* Reporting structure details */}
                     <div className="flex items-center gap-2 min-w-[200px]">
-                      <GitMerge className="w-4 h-4 text-slate-400" />
+                      <GitMerge className="w-4 h-4 text-foreground-dim" />
                       <div className="text-xs">
-                        <span className="text-slate-500 block">Reports to:</span>
+                        <span className="text-foreground-dim block">Reports to:</span>
                         {member.reportsToId && manager ? (
-                          <span className="font-semibold text-slate-700">
+                          <span className="font-semibold text-foreground-muted">
                             {manager.user.fullName}
                           </span>
                         ) : (
-                          <span className="text-slate-400 font-medium">Direct Report (None)</span>
+                          <span className="text-foreground-dim/50 font-medium">
+                            Direct Report (None)
+                          </span>
                         )}
                       </div>
                     </div>
@@ -483,18 +502,25 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                     <div className="flex flex-wrap items-center gap-3">
                       {/* Role selection dropdown */}
                       <div className="flex items-center gap-1.5">
-                        <Shield className="w-3.5 h-3.5 text-slate-400" />
+                        <Shield className="w-3.5 h-3.5 text-foreground-dim" />
                         <Select
                           value={member.role}
                           onValueChange={(val) => handleRoleChange(member.id, val)}
-                          disabled={actionLoading !== null}
+                          disabled={
+                            roleChangeMutation.isPending &&
+                            roleChangeMutation.variables?.memberId === member.id
+                          }
                         >
-                          <SelectTrigger className="h-8 w-32 text-xs">
+                          <SelectTrigger className="h-8 w-32 text-xs bg-surface-3 border-border-default text-foreground focus:ring-border-strong rounded-md">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-surface-2 border border-border-default text-foreground rounded-md shadow-none">
                             {availableRoles.map((role) => (
-                              <SelectItem key={role.id} value={role.name}>
+                              <SelectItem
+                                key={role.id}
+                                value={role.name}
+                                className="text-xs focus:bg-surface-3 focus:text-foreground"
+                              >
                                 <span className="capitalize text-xs">
                                   {role.name.replace(/_/g, ' ')}
                                 </span>
@@ -506,21 +532,33 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
 
                       {/* Reports To dropdown */}
                       <div className="flex items-center gap-1.5">
-                        <ArrowRightLeft className="w-3.5 h-3.5 text-slate-400" />
+                        <ArrowRightLeft className="w-3.5 h-3.5 text-foreground-dim" />
                         <Select
                           value={member.reportsToId || '__none__'}
                           onValueChange={(val) => handleManagerChange(member.id, val)}
-                          disabled={actionLoading !== null}
+                          disabled={
+                            managerChangeMutation.isPending &&
+                            managerChangeMutation.variables?.memberId === member.id
+                          }
                         >
-                          <SelectTrigger className="h-8 w-40 text-xs">
+                          <SelectTrigger className="h-8 w-40 text-xs bg-surface-3 border-border-default text-foreground focus:ring-border-strong rounded-md">
                             <SelectValue placeholder="Assign Lead..." />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none__">No Lead (Direct)</SelectItem>
+                          <SelectContent className="bg-surface-2 border border-border-default text-foreground rounded-md shadow-none">
+                            <SelectItem
+                              value="__none__"
+                              className="text-xs focus:bg-surface-3 focus:text-foreground"
+                            >
+                              No Lead (Direct)
+                            </SelectItem>
                             {teamMembers
-                              .filter((m) => m.user.id !== member.user.id) // cannot report to self
+                              .filter((m) => m.user.id !== member.user.id)
                               .map((m) => (
-                                <SelectItem key={m.user.id} value={m.user.id} className="text-xs">
+                                <SelectItem
+                                  key={m.user.id}
+                                  value={m.user.id}
+                                  className="text-xs focus:bg-surface-3 focus:text-foreground"
+                                >
                                   {m.user.fullName}
                                 </SelectItem>
                               ))}
@@ -532,9 +570,12 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                        className="text-red-400 hover:text-red-500 hover:bg-red-500/10 h-8 w-8 p-0 rounded-md transition-colors"
                         onClick={() => handleRemoveMember(member.id, member.user.fullName)}
-                        disabled={actionLoading !== null}
+                        disabled={
+                          removeMemberMutation.isPending &&
+                          removeMemberMutation.variables === member.id
+                        }
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -544,7 +585,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
               })}
             </div>
           ) : (
-            <div className="p-8 text-center text-slate-500">
+            <div className="p-8 text-center text-xs italic text-foreground-dim/60">
               No members found in this workspace.
             </div>
           )}

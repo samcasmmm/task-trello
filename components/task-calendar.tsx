@@ -64,9 +64,9 @@ export default function TaskCalendar({ tasks = [] }: { projectId: string; tasks:
 
   return (
     <Card className="p-6 rounded-lg bg-surface-2 border border-border-subtle">
-      <CardHeader className="flex flex-row items-center justify-between pb-6 border-b border-slate-800 mb-6">
-        <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-100">
-          <CalendarDays className="w-5 h-5 text-slate-400" />
+      <CardHeader className="flex flex-row items-center justify-between pb-6 border-b border-gray-800 mb-6">
+        <CardTitle className="text-lg font-bold flex items-center gap-2 text-gray-100">
+          <CalendarDays className="w-5 h-5 text-gray-400" />
           {currentDate.toLocaleString('default', {
             month: 'long',
             year: 'numeric',
@@ -107,7 +107,7 @@ export default function TaskCalendar({ tasks = [] }: { projectId: string; tasks:
           {WEEKDAYS.map((day) => (
             <div
               key={day}
-              className="py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-surface-1"
+              className="py-3 text-center text-xs font-bold uppercase tracking-wider text-gray-400 bg-surface-1"
             >
               {day}
             </div>
@@ -129,7 +129,7 @@ export default function TaskCalendar({ tasks = [] }: { projectId: string; tasks:
                   <div className="flex justify-between items-center mb-1">
                     <span
                       className={`text-xs font-bold font-mono rounded-full w-5 h-5 flex items-center justify-center ${
-                        isToday ? 'bg-slate-100 text-slate-950' : 'text-slate-400'
+                        isToday ? 'bg-gray-100 text-gray-950' : 'text-gray-400'
                       }`}
                     >
                       {cell.day}

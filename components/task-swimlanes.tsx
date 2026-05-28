@@ -56,20 +56,20 @@ export default function TaskSwimlanes({ tasks = [] }: TaskSwimlanesProps) {
   return (
     <div className="space-y-4">
       {/* Selector switches */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+      <div className="flex items-center justify-between pb-2 border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-slate-400" />
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+          <Layers className="w-4 h-4 text-gray-400" />
+          <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
             Group Swimlanes By
           </span>
         </div>
-        <div className="flex items-center gap-1 bg-slate-950/60 p-0.5 rounded-lg border border-slate-800">
+        <div className="flex items-center gap-1 bg-gray-950/60 p-0.5 rounded-lg border border-gray-800">
           <button
             onClick={() => setSwimlaneBy('priority')}
             className={`px-3 py-1 rounded text-[10px] font-bold uppercase transition-all ${
               swimlaneBy === 'priority'
-                ? 'bg-slate-800 text-white border border-slate-700'
-                : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-gray-800 text-white border border-gray-700'
+                : 'text-gray-500 hover:text-gray-300'
             }`}
           >
             Priority
@@ -78,8 +78,8 @@ export default function TaskSwimlanes({ tasks = [] }: TaskSwimlanesProps) {
             onClick={() => setSwimlaneBy('assignee')}
             className={`px-3 py-1 rounded text-[10px] font-bold uppercase transition-all ${
               swimlaneBy === 'assignee'
-                ? 'bg-slate-800 text-white border border-slate-700'
-                : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-gray-800 text-white border border-gray-700'
+                : 'text-gray-500 hover:text-gray-300'
             }`}
           >
             Assignee
@@ -96,7 +96,7 @@ export default function TaskSwimlanes({ tasks = [] }: TaskSwimlanesProps) {
           >
             {/* Header label for each swimlane row */}
             <div className="px-4 py-2 border-b flex items-center justify-between bg-surface-1 border-border-subtle">
-              <h3 className="text-xs font-bold text-slate-300 tracking-wider font-mono">
+              <h3 className="text-xs font-bold text-gray-300 tracking-wider font-mono">
                 {getLabel(row)}
               </h3>
               <span className="text-[10px] border font-bold px-2 py-0.5 rounded bg-surface-3 border-border-strong text-foreground-muted">
@@ -122,7 +122,7 @@ export default function TaskSwimlanes({ tasks = [] }: TaskSwimlanesProps) {
                   >
                     {/* Status header indicator */}
                     <div className="flex items-center gap-1.5 mb-2.5 pb-1 border-b border-border-subtle">
-                      <span className="text-[9px] font-extrabold uppercase text-slate-500">
+                      <span className="text-[9px] font-extrabold uppercase text-gray-500">
                         {STATUS_LABELS[status]}
                       </span>
                       <span className="text-[8px] ml-auto font-black rounded px-1 bg-surface-3 text-foreground-muted">
@@ -135,9 +135,9 @@ export default function TaskSwimlanes({ tasks = [] }: TaskSwimlanesProps) {
                       {laneTasks.map((t) => (
                         <Link key={t.id} href={`/dashboard/task/${t.id}`} className="block">
                           <div
-                            className={`p-2.5 rounded-lg border text-xs font-semibold flex flex-col justify-between hover:border-slate-500 transition-all border-border-subtle ${
+                            className={`p-2.5 rounded-lg border text-xs font-semibold flex flex-col justify-between hover:border-gray-500 transition-all border-border-subtle ${
                               PRIORITY_COLOR[t.priority] ||
-                              'border-l-zinc-500 bg-slate-950/40 text-slate-300'
+                              'border-l-zinc-500 bg-gray-950/40 text-gray-300'
                             }`}
                           >
                             <span className="truncate text-[11px]">{t.title}</span>
@@ -145,7 +145,7 @@ export default function TaskSwimlanes({ tasks = [] }: TaskSwimlanesProps) {
                               <div className="flex items-center gap-1.5 mt-2 ml-auto">
                                 <Avatar className="h-4 w-4 rounded-sm border border-border-strong">
                                   <AvatarImage src={t.assigned_to_user.avatarUrl || ''} />
-                                  <AvatarFallback className="text-[7px] font-black bg-slate-800 text-slate-300 rounded-sm">
+                                  <AvatarFallback className="text-[7px] font-black bg-gray-800 text-gray-300 rounded-sm">
                                     {t.assigned_to_user.fullName?.substring(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>

@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         ...task,
+        tenantId: project.tenantId,
         project_id: task.projectId,
         due_date: task.dueDate,
         assigned_to_user: assignedTo

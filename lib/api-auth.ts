@@ -167,23 +167,34 @@ export async function requirePermission(userId: string, permissionName: string, 
 /**
  * Check if user can assign tasks in a tenant
  * Admin/Owner: can assign to any user
- * Manager: can assign to users only
- * Member/Viewer: cannot assign
+ * Manager: can assign to any user
+ * Member: can assign to any user (same-level reassignment allowed)
+ * Viewer: cannot assign
  */
 export async function canAssignTasks(userId: string, tenantId: string): Promise<boolean> {
   const userRole = await getUserTenantRole(userId, tenantId);
 
-  // owner and admin can assign
-  if (userRole === 'owner' || userRole === 'admin') {
+  // owner, admin, manager, and member can all assign
+  if (
+    userRole === 'owner' ||
+    userRole === 'admin' ||
+    userRole === 'manager' ||
+    userRole === 'member'
+  ) {
     return true;
   }
 
-  // manager can assign
-  if (userRole === 'manager') {
+  // For custom roles, check keyword analysis
+  if (userRole) {
+    const lowerRole = userRole.toLowerCase();
+    if (lowerRole.includes('view') || lowerRole.includes('guest') || lowerRole.includes('read')) {
+      return false;
+    }
+    // Custom roles default to allowed (member-equivalent)
     return true;
   }
 
-  // member and viewer cannot assign
+  // viewer and unknown cannot assign
   return false;
 }
 

@@ -15,21 +15,21 @@ export const STATUS_CONFIG: Record<
 > = {
   todo: {
     label: 'To Do',
-    barClass: 'bg-slate-600',
-    countClass: 'bg-slate-800/40 text-slate-400',
-    dropActive: 'bg-slate-800/10 border-slate-700 border-dashed',
+    barClass: 'bg-gray-600',
+    countClass: 'bg-gray-800/40 text-gray-400',
+    dropActive: 'bg-gray-800/10 border-gray-700 border-dashed',
   },
   in_progress: {
     label: 'In Progress',
-    barClass: 'bg-slate-400',
-    countClass: 'bg-slate-700/40 text-slate-300',
-    dropActive: 'bg-slate-700/10 border-slate-600 border-dashed',
+    barClass: 'bg-gray-400',
+    countClass: 'bg-gray-700/40 text-gray-300',
+    dropActive: 'bg-gray-700/10 border-gray-600 border-dashed',
   },
   in_review: {
     label: 'In Review',
-    barClass: 'bg-slate-300',
-    countClass: 'bg-slate-600/40 text-slate-200',
-    dropActive: 'bg-slate-600/10 border-slate-500 border-dashed',
+    barClass: 'bg-gray-300',
+    countClass: 'bg-gray-600/40 text-gray-200',
+    dropActive: 'bg-gray-600/10 border-gray-500 border-dashed',
   },
   done: {
     label: 'Done',

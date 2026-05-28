@@ -6,14 +6,14 @@ import { formatDate } from '@/lib/utils';
 import { Clock, AlertTriangle, MessageSquare, CheckSquare } from 'lucide-react';
 
 const PRIORITY_DOT_CLASSES: Record<string, string> = {
-  low: 'bg-slate-600',
+  low: 'bg-gray-600',
   medium: 'bg-amber-500',
   high: 'bg-orange-500',
   urgent: 'bg-red-500',
 };
 
 const PRIORITY_LABEL_CLASSES: Record<string, string> = {
-  low: 'text-slate-500 bg-slate-800/40',
+  low: 'text-gray-500 bg-gray-800/40',
   medium: 'text-amber-500 bg-amber-950/20',
   high: 'text-orange-500 bg-orange-950/20',
   urgent: 'text-red-500 bg-red-950/20',
@@ -49,7 +49,7 @@ export function TaskBoardCard({
           {/* Priority dot + title */}
           <div className="flex items-start gap-2.5 mb-3">
             <div
-              className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${PRIORITY_DOT_CLASSES[task.priority] || 'bg-slate-600'}`}
+              className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${PRIORITY_DOT_CLASSES[task.priority] || 'bg-gray-600'}`}
             />
             <h4 className="text-xs font-semibold leading-snug line-clamp-2 flex-1 text-foreground transition-colors group-hover:text-foreground-muted">
               {task.title}
@@ -59,7 +59,7 @@ export function TaskBoardCard({
           {/* Footer row */}
           <div className="flex items-center justify-between gap-2">
             <span
-              className={`text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${PRIORITY_LABEL_CLASSES[task.priority] || 'text-slate-500 bg-slate-800/40'}`}
+              className={`text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${PRIORITY_LABEL_CLASSES[task.priority] || 'text-gray-500 bg-gray-800/40'}`}
             >
               {task.priority}
             </span>

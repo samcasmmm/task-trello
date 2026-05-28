@@ -15,22 +15,22 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_CLASSES: Record<string, string> = {
-  todo: 'text-slate-400 bg-slate-400/10',
-  in_progress: 'text-slate-300 bg-slate-300/10',
-  in_review: 'text-slate-200 bg-slate-200/10',
+  todo: 'text-gray-400 bg-gray-400/10',
+  in_progress: 'text-gray-300 bg-gray-300/10',
+  in_review: 'text-gray-200 bg-gray-200/10',
   done: 'text-emerald-400 bg-emerald-400/10',
   blocked: 'text-rose-400 bg-rose-400/10',
 };
 
 const PRIORITY_DOT_CLASSES: Record<string, string> = {
-  low: 'bg-slate-600',
+  low: 'bg-gray-600',
   medium: 'bg-amber-500',
   high: 'bg-orange-500',
   urgent: 'bg-red-500',
 };
 
 const PRIORITY_TEXT_CLASSES: Record<string, string> = {
-  low: 'text-slate-500',
+  low: 'text-gray-500',
   medium: 'text-amber-500',
   high: 'text-orange-500',
   urgent: 'text-red-500',
@@ -135,10 +135,10 @@ export default function TaskList({ tasks = [] }: { projectId: string; tasks: any
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           <div
-                            className={`w-1.5 h-1.5 rounded-full ${PRIORITY_DOT_CLASSES[task.priority] || 'bg-slate-600'}`}
+                            className={`w-1.5 h-1.5 rounded-full ${PRIORITY_DOT_CLASSES[task.priority] || 'bg-gray-600'}`}
                           />
                           <span
-                            className={`text-[10px] font-semibold capitalize ${PRIORITY_TEXT_CLASSES[task.priority] || 'text-slate-500'}`}
+                            className={`text-[10px] font-semibold capitalize ${PRIORITY_TEXT_CLASSES[task.priority] || 'text-gray-500'}`}
                           >
                             {task.priority}
                           </span>

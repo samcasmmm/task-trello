@@ -62,6 +62,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 import SubtasksSection from './subtasks-section';
 import TaskAttachments from './task-attachments';
 import WysiwygEditor from './wysiwyg-editor';
+import MentionCommentInput from './mention-comment-input';
 
 const safeDateFormat = (dateVal: any) => {
   if (!dateVal) return '';
@@ -140,10 +141,19 @@ export default function TaskDetailView({
   };
 
   useEffect(() => {
-    // Fetch team members from tenant
+    // Fetch team members from tenant (workspace)
     const fetchTeamMembers = async () => {
       try {
-        const tenantId = task.tenantId || projectId;
+        // Resolve the actual tenantId: prefer task.tenantId (from API), else fetch project
+        let tenantId = task.tenantId;
+        if (!tenantId && projectId) {
+          try {
+            const projectRes = await api.get(`/api/projects/${projectId}`);
+            tenantId = projectRes.data?.tenantId;
+          } catch (e) {
+            console.error('Failed to fetch project for tenantId:', e);
+          }
+        }
         if (!tenantId) return;
 
         const response = await api.get(`/api/tenants/${tenantId}/members`);
@@ -422,6 +432,13 @@ export default function TaskDetailView({
                   onChange={(val) => setFormData({ ...formData, description: val })}
                   placeholder="Add more details about this task..."
                   minHeight="120px"
+                  members={teamMembers.map((m) => ({
+                    userId: m.userId,
+                    fullName: m.fullName || m.email,
+                    email: m.email,
+                    avatarUrl: m.avatarUrl,
+                    role: m.role,
+                  }))}
                 />
               ) : (
                 <div
@@ -680,7 +697,10 @@ export default function TaskDetailView({
                         {formatDate(comment.created_at)}
                       </span>
                     </div>
-                    <p className="text-gray-300 leading-relaxed">{comment.content}</p>
+                    <div
+                      className="text-gray-300 leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: comment.content }}
+                    />
                   </div>
                 ))}
               </div>
@@ -691,12 +711,17 @@ export default function TaskDetailView({
               onSubmit={handleAddComment}
               className="space-y-2 border-t pt-4 border-border-subtle"
             >
-              <Textarea
-                placeholder="Post a work update or ask a question..."
+              <MentionCommentInput
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                rows={3}
-                className="text-gray-200 text-xs rounded focus-visible:ring-gray-700 bg-surface-3 border-border-default"
+                onChange={setCommentText}
+                placeholder="Post a work update or @ mention someone..."
+                members={teamMembers.map((m) => ({
+                  userId: m.userId,
+                  fullName: m.fullName || m.email,
+                  email: m.email,
+                  avatarUrl: m.avatarUrl,
+                  role: m.role,
+                }))}
               />
               <div className="flex justify-end">
                 <Button

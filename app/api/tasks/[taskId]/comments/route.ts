@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, verifyTenantAccess } from '@/lib/api-auth';
-import db, { projects, tasks, taskComments, users, eq } from '@/lib/drizzle';
+import db, { projects, tasks, taskComments, users, tenantMembers, eq } from '@/lib/drizzle';
 import { createAuditLog } from '@/lib/audit';
 import { createNotification } from '@/lib/notification';
+
+/**
+ * Extract mentioned user IDs from comment HTML content.
+ * Looks for spans with data-mention-id attribute: <span data-mention-id="userId">@Name</span>
+ */
+function extractMentionedUserIds(content: string): string[] {
+  const mentionRegex = /data-mention-id="([^"]+)"/g;
+  const userIds: string[] = [];
+  let match;
+  while ((match = mentionRegex.exec(content)) !== null) {
+    if (match[1] && !userIds.includes(match[1])) {
+      userIds.push(match[1]);
+    }
+  }
+  return userIds;
+}
 
 /**
  * POST /api/tasks/[taskId]/comments - Add comment to task
@@ -71,6 +87,19 @@ export async function POST(
       await createNotification(
         task.assignedToId,
         `${user?.fullName || authContext.email} commented on "${task.title}".`,
+      );
+    }
+
+    // Parse @mentions from content and notify mentioned users
+    const mentionedUserIds = extractMentionedUserIds(content);
+    for (const mentionedUserId of mentionedUserIds) {
+      // Don't notify the commenter or the already-notified assignee
+      if (mentionedUserId === authContext.userId) continue;
+      if (mentionedUserId === task.assignedToId) continue;
+
+      await createNotification(
+        mentionedUserId,
+        `${user?.fullName || authContext.email} mentioned you in a comment on "${task.title}".`,
       );
     }
 
