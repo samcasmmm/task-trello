@@ -143,7 +143,7 @@ export default function TaskDetailView({
     // Fetch team members from tenant
     const fetchTeamMembers = async () => {
       try {
-        let tenantId = task.tenantId || projectId;
+        const tenantId = task.tenantId || projectId;
         if (!tenantId) return;
 
         const response = await api.get(`/api/tenants/${tenantId}/members`);

@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { TrendingUp, Activity, AlertTriangle } from 'lucide-react'
+import { TrendingUp, Activity, AlertTriangle } from 'lucide-react';
 import {
   ResponsiveContainer,
   LineChart,
@@ -15,21 +15,21 @@ import {
   Cell,
   BarChart,
   Bar,
-} from 'recharts'
+} from 'recharts';
 
 interface StatsData {
-  totalTasks: number
-  completedTasks: number
-  inProgressTasks: number
-  tasksDueToday: number
-  overdueTasks: number
-  tasksByStatus: { status: string; count: number }[]
-  tasksByPriority: { priority: string; count: number }[]
-  monthlyTrend: { name: string; created: number; completed: number }[]
+  totalTasks: number;
+  completedTasks: number;
+  inProgressTasks: number;
+  tasksDueToday: number;
+  overdueTasks: number;
+  tasksByStatus: { status: string; count: number }[];
+  tasksByPriority: { priority: string; count: number }[];
+  monthlyTrend: { name: string; created: number; completed: number }[];
 }
 
 interface ProjectChartsProps {
-  stats: StatsData | null
+  stats: StatsData | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -38,14 +38,14 @@ const STATUS_COLORS: Record<string, string> = {
   in_review: '#bbbbbb',
   done: '#6ee7b7',
   blocked: '#f87171',
-}
+};
 
 const PRIORITY_COLORS: Record<string, string> = {
   low: '#555555',
   medium: '#d4a84b',
   high: '#e08050',
   urgent: '#e05555',
-}
+};
 
 const tooltipStyle = {
   backgroundColor: '#111111',
@@ -54,83 +54,76 @@ const tooltipStyle = {
   color: '#aaaaaa',
   fontSize: '11px',
   boxShadow: 'none',
-}
+};
 
 export default function ProjectCharts({ stats }: ProjectChartsProps) {
-  if (!stats || stats.totalTasks === 0) return null
+  if (!stats || stats.totalTasks === 0) return null;
 
   const statusChartData = stats.tasksByStatus.map((s) => ({
     name: s.status.replace(/_/g, ' '),
     value: s.count,
     color: STATUS_COLORS[s.status] || '#555',
-  }))
+  }));
 
   const priorityChartData = stats.tasksByPriority.map((p) => ({
     name: p.priority,
     value: p.count,
     fill: PRIORITY_COLORS[p.priority] || '#555',
-  }))
+  }));
 
   return (
-    <div className='grid gap-4 md:grid-cols-12'>
+    <div className="grid gap-4 md:grid-cols-12">
       {/* Monthly line chart */}
-      <div className='md:col-span-7 rounded-lg overflow-hidden bg-surface-2 border border-border-subtle'>
-        <div className='flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1'>
-          <TrendingUp className='w-3.5 h-3.5 text-foreground-dim' />
-          <span className='text-xs font-bold text-foreground'>
-            Monthly Task Trend
-          </span>
-          <span className='text-[10px] ml-auto font-medium text-foreground-dim'>
+      <div className="md:col-span-7 rounded-lg overflow-hidden bg-surface-2 border border-border-subtle">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1">
+          <TrendingUp className="w-3.5 h-3.5 text-foreground-dim" />
+          <span className="text-xs font-bold text-foreground">Monthly Task Trend</span>
+          <span className="text-[10px] ml-auto font-medium text-foreground-dim">
             Last 12 months
           </span>
         </div>
-        <div className='p-4'>
-          <div className='h-52 w-full'>
-            <ResponsiveContainer width='100%' height='100%'>
+        <div className="p-4">
+          <div className="h-52 w-full">
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={stats.monthlyTrend}>
                 <CartesianGrid
-                  strokeDasharray='2 4'
+                  strokeDasharray="2 4"
                   vertical={false}
-                  stroke='rgba(255,255,255,0.04)'
+                  stroke="rgba(255,255,255,0.04)"
                 />
                 <XAxis
-                  dataKey='name'
-                  stroke='#444'
+                  dataKey="name"
+                  stroke="#444"
                   fontSize={9}
                   tickLine={false}
                   axisLine={false}
                   interval={1}
                 />
-                <YAxis
-                  stroke='#444'
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                />
+                <YAxis stroke="#444" fontSize={10} tickLine={false} axisLine={false} />
                 <RechartsTooltip
                   contentStyle={tooltipStyle}
                   itemStyle={{ color: '#aaa' }}
                   labelStyle={{ color: '#777', fontWeight: 700 }}
                 />
                 <Legend
-                  verticalAlign='top'
+                  verticalAlign="top"
                   height={28}
-                  iconType='circle'
+                  iconType="circle"
                   wrapperStyle={{ fontSize: '10px', color: '#666' }}
                 />
                 <Line
-                  type='monotone'
-                  dataKey='created'
-                  name='Created'
-                  stroke='#555'
+                  type="monotone"
+                  dataKey="created"
+                  name="Created"
+                  stroke="#555"
                   strokeWidth={1.5}
                   dot={false}
                 />
                 <Line
-                  type='monotone'
-                  dataKey='completed'
-                  name='Completed'
-                  stroke='#6ee7b7'
+                  type="monotone"
+                  dataKey="completed"
+                  name="Completed"
+                  stroke="#6ee7b7"
                   strokeWidth={1.5}
                   dot={false}
                 />
@@ -141,55 +134,48 @@ export default function ProjectCharts({ stats }: ProjectChartsProps) {
       </div>
 
       {/* Status + Priority stacked */}
-      <div className='md:col-span-5 flex flex-col gap-4'>
+      <div className="md:col-span-5 flex flex-col gap-4">
         {/* Status donut */}
-        <div className='flex-1 rounded-lg overflow-hidden bg-surface-2 border border-border-subtle'>
-          <div className='flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1'>
-            <Activity className='w-3.5 h-3.5 text-foreground-dim' />
-            <span className='text-xs font-bold text-foreground'>
-              By Status
-            </span>
+        <div className="flex-1 rounded-lg overflow-hidden bg-surface-2 border border-border-subtle">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1">
+            <Activity className="w-3.5 h-3.5 text-foreground-dim" />
+            <span className="text-xs font-bold text-foreground">By Status</span>
           </div>
-          <div className='p-3'>
-            <div className='flex items-center gap-3'>
-              <div className='h-28 w-28 flex-shrink-0 relative'>
-                <ResponsiveContainer width='100%' height='100%'>
+          <div className="p-3">
+            <div className="flex items-center gap-3">
+              <div className="h-28 w-28 shrink-0 relative">
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={statusChartData}
                       innerRadius={30}
                       outerRadius={46}
                       paddingAngle={3}
-                      dataKey='value'
+                      dataKey="value"
                     >
                       {statusChartData.map((e, i) => (
                         <Cell key={i} fill={e.color} />
                       ))}
                     </Pie>
-                    <RechartsTooltip
-                      contentStyle={tooltipStyle}
-                      itemStyle={{ color: '#aaa' }}
-                    />
+                    <RechartsTooltip contentStyle={tooltipStyle} itemStyle={{ color: '#aaa' }} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
-                  <span className='text-sm font-black text-foreground'>
-                    {stats.totalTasks}
-                  </span>
-                  <span className='field-label'>Total</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-sm font-black text-foreground">{stats.totalTasks}</span>
+                  <span className="field-label">Total</span>
                 </div>
               </div>
-              <div className='flex flex-col gap-1.5 flex-1'>
+              <div className="flex flex-col gap-1.5 flex-1">
                 {statusChartData.map((item, i) => (
-                  <div key={i} className='flex items-center gap-1.5'>
+                  <div key={i} className="flex items-center gap-1.5">
                     <div
-                      className='w-1.5 h-1.5 rounded-sm flex-shrink-0'
+                      className="w-1.5 h-1.5 rounded-sm shrink-0"
                       style={{ background: item.color }}
                     />
-                    <span className='text-[10px] font-medium capitalize flex-1 text-foreground-dim'>
+                    <span className="text-[10px] font-medium capitalize flex-1 text-foreground-dim">
                       {item.name}
                     </span>
-                    <span className='text-[10px] font-bold text-foreground-muted'>
+                    <span className="text-[10px] font-bold text-foreground-muted">
                       {item.value}
                     </span>
                   </div>
@@ -201,26 +187,24 @@ export default function ProjectCharts({ stats }: ProjectChartsProps) {
 
         {/* Priority bar chart */}
         {priorityChartData.length > 0 && (
-          <div className='rounded-lg overflow-hidden bg-surface-2 border border-border-subtle'>
-            <div className='flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1'>
-              <AlertTriangle className='w-3.5 h-3.5 text-foreground-dim' />
-              <span className='text-xs font-bold text-foreground'>
-                By Priority
-              </span>
+          <div className="rounded-lg overflow-hidden bg-surface-2 border border-border-subtle">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1">
+              <AlertTriangle className="w-3.5 h-3.5 text-foreground-dim" />
+              <span className="text-xs font-bold text-foreground">By Priority</span>
             </div>
-            <div className='p-3'>
-              <div className='h-24 w-full'>
-                <ResponsiveContainer width='100%' height='100%'>
+            <div className="p-3">
+              <div className="h-24 w-full">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={priorityChartData} barSize={18}>
                     <XAxis
-                      dataKey='name'
-                      stroke='#444'
+                      dataKey="name"
+                      stroke="#444"
                       fontSize={9}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      stroke='#444'
+                      stroke="#444"
                       fontSize={9}
                       tickLine={false}
                       axisLine={false}
@@ -231,7 +215,7 @@ export default function ProjectCharts({ stats }: ProjectChartsProps) {
                       itemStyle={{ color: '#aaa' }}
                       cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                     />
-                    <Bar dataKey='value' name='Tasks' radius={[3, 3, 0, 0]}>
+                    <Bar dataKey="value" name="Tasks" radius={[3, 3, 0, 0]}>
                       {priorityChartData.map((entry, i) => (
                         <Cell key={i} fill={entry.fill} />
                       ))}
@@ -244,5 +228,5 @@ export default function ProjectCharts({ stats }: ProjectChartsProps) {
         )}
       </div>
     </div>
-  )
+  );
 }

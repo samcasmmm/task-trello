@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, verifyTenantAccess, verifyTenantRole } from '@/lib/api-auth'
-import db, { projects, tasks, customFields, eq, sql } from '@/lib/drizzle'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, verifyTenantAccess, verifyTenantRole } from '@/lib/api-auth';
+import db, { projects, tasks, customFields, eq, sql } from '@/lib/drizzle';
 
 async function getProjectById(projectId: string) {
   const [project] = await db
@@ -19,9 +19,9 @@ async function getProjectById(projectId: string) {
     .from(projects)
     .where(eq(projects.id, projectId))
     .limit(1)
-    .execute()
+    .execute();
 
-  return project
+  return project;
 }
 
 /**
@@ -29,34 +29,34 @@ async function getProjectById(projectId: string) {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ projectId: string }> }
+  { params }: { params: Promise<{ projectId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { projectId } = await params
+    const authContext = await requireAuth();
+    const { projectId } = await params;
 
-    const project = await getProjectById(projectId)
+    const project = await getProjectById(projectId);
 
     if (!project) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const hasAccess = await verifyTenantAccess(authContext.userId, project.tenantId)
+    const hasAccess = await verifyTenantAccess(authContext.userId, project.tenantId);
     if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const [taskCountRow] = await db
       .select({ count: sql<number>`count(*)` })
       .from(tasks)
       .where(eq(tasks.projectId, projectId))
-      .execute()
+      .execute();
 
     const [customFieldCountRow] = await db
       .select({ count: sql<number>`count(*)` })
       .from(customFields)
       .where(eq(customFields.projectId, projectId))
-      .execute()
+      .execute();
 
     return NextResponse.json({
       ...project,
@@ -64,12 +64,12 @@ export async function GET(
         tasks: Number(taskCountRow?.count ?? 0),
         customFields: Number(customFieldCountRow?.count ?? 0),
       },
-    })
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
 
@@ -78,27 +78,27 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ projectId: string }> }
+  { params }: { params: Promise<{ projectId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { projectId } = await params
+    const authContext = await requireAuth();
+    const { projectId } = await params;
 
     const project = await db.query.projects.findFirst({
       where: eq(projects.id, projectId),
-    })
+    });
 
     if (!project) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const isAdmin = await verifyTenantRole(authContext.userId, project.tenantId, 'admin')
+    const isAdmin = await verifyTenantRole(authContext.userId, project.tenantId, 'admin');
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await request.json()
-    const { name, description, color, icon, status } = body
+    const body = await request.json();
+    const { name, description, color, icon, status } = body;
 
     const [updated] = await db
       .update(projects)
@@ -111,14 +111,14 @@ export async function PATCH(
         updatedAt: new Date(),
       })
       .where(eq(projects.id, projectId))
-      .returning()
+      .returning();
 
-    return NextResponse.json(updated)
+    return NextResponse.json(updated);
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
 
@@ -127,33 +127,32 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ projectId: string }> }
+  { params }: { params: Promise<{ projectId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { projectId } = await params
+    const authContext = await requireAuth();
+    const { projectId } = await params;
 
     const project = await db.query.projects.findFirst({
       where: eq(projects.id, projectId),
-    })
+    });
 
     if (!project) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const isAdmin = await verifyTenantRole(authContext.userId, project.tenantId, 'admin')
+    const isAdmin = await verifyTenantRole(authContext.userId, project.tenantId, 'admin');
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    await db.delete(projects).where(eq(projects.id, projectId))
+    await db.delete(projects).where(eq(projects.id, projectId));
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
-

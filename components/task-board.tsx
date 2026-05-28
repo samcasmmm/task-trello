@@ -46,8 +46,8 @@ export default function TaskBoard({
   };
 
   return (
-    <div className='overflow-x-auto pb-4 -mx-1 px-1'>
-      <div className='flex gap-3 min-w-max'>
+    <div className="overflow-x-auto pb-4 -mx-1 px-1">
+      <div className="flex gap-3 min-w-max">
         {STATUSES.map((status) => (
           <TaskBoardColumn
             key={status}
@@ -56,11 +56,20 @@ export default function TaskBoard({
             projectId={projectId}
             isDragTarget={dragOverStatus === status}
             draggingId={draggingId}
-            onDragOver={(e) => { e.preventDefault(); setDragOverStatus(status); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOverStatus(status);
+            }}
             onDragLeave={() => setDragOverStatus(null)}
             onDrop={(e) => handleDrop(e, status)}
-            onDragStart={(e, taskId) => { e.dataTransfer.setData('taskId', taskId); setDraggingId(taskId); }}
-            onDragEnd={() => { setDraggingId(null); setDragOverStatus(null); }}
+            onDragStart={(e, taskId) => {
+              e.dataTransfer.setData('taskId', taskId);
+              setDraggingId(taskId);
+            }}
+            onDragEnd={() => {
+              setDraggingId(null);
+              setDragOverStatus(null);
+            }}
             onTaskCreated={onTaskCreated}
           />
         ))}

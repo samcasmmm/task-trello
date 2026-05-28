@@ -5,11 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Plus, Mail, UserPlus, Trash2, ArrowRightLeft, Shield, Users, GitMerge } from 'lucide-react';
+import {
+  Plus,
+  Mail,
+  UserPlus,
+  Trash2,
+  ArrowRightLeft,
+  Shield,
+  Users,
+  GitMerge,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/axios';
 
@@ -99,11 +122,14 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
       });
 
       const result = response.data;
-      
+
       if (result.isAutoCreated) {
-        toast.success(`Account created and invited: ${inviteEmail}. Temporary password: Welcome123!`, {
-          duration: 8000,
-        });
+        toast.success(
+          `Account created and invited: ${inviteEmail}. Temporary password: Welcome123!`,
+          {
+            duration: 8000,
+          },
+        );
       } else {
         toast.success(`Successfully added ${inviteEmail} to workspace.`);
       }
@@ -174,7 +200,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
     setActionLoading(memberId);
     try {
       await api.patch(`/api/tenants/${tenantId}/members/${memberId}`, {
-        reportsToId: newManagerUserId === '__none__' ? null : newManagerUserId
+        reportsToId: newManagerUserId === '__none__' ? null : newManagerUserId,
       });
 
       toast.success('Reporting line updated.');
@@ -199,7 +225,8 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
       toast.success(`${name} removed successfully.`);
       fetchMembersAndRoles();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to remove member.';
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Failed to remove member.';
       toast.error(errorMessage);
     } finally {
       setActionLoading(null);
@@ -228,7 +255,7 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
             Manage workspace memberships, custom roles, and visual reporting structures
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           {/* Invite User Dialog */}
           <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
@@ -242,7 +269,8 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
               <DialogHeader>
                 <DialogTitle>Invite Workspace Member</DialogTitle>
                 <DialogDescription>
-                  Enter the email address of the team member. If they are not yet registered, an account will be created automatically.
+                  Enter the email address of the team member. If they are not yet registered, an
+                  account will be created automatically.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleInvite} className="space-y-4 py-3">
@@ -310,7 +338,8 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
               <DialogHeader>
                 <DialogTitle>Register & Add New User</DialogTitle>
                 <DialogDescription>
-                  Directly create a new user profile on the platform and add them to this workspace immediately.
+                  Directly create a new user profile on the platform and add them to this workspace
+                  immediately.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateUser} className="space-y-4 py-3">
@@ -425,7 +454,9 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                       <div>
                         <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
                           {member.user.fullName}
-                          <Badge className={`capitalize shadow-none text-[10px] py-0 px-1.5 ${ROLE_COLORS[member.role] || 'bg-slate-100 text-slate-700'}`}>
+                          <Badge
+                            className={`capitalize shadow-none text-[10px] py-0 px-1.5 ${ROLE_COLORS[member.role] || 'bg-slate-100 text-slate-700'}`}
+                          >
                             {member.role.replace(/_/g, ' ')}
                           </Badge>
                         </h4>
@@ -439,7 +470,9 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                       <div className="text-xs">
                         <span className="text-slate-500 block">Reports to:</span>
                         {member.reportsToId && manager ? (
-                          <span className="font-semibold text-slate-700">{manager.user.fullName}</span>
+                          <span className="font-semibold text-slate-700">
+                            {manager.user.fullName}
+                          </span>
                         ) : (
                           <span className="text-slate-400 font-medium">Direct Report (None)</span>
                         )}
@@ -462,7 +495,9 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
                           <SelectContent>
                             {availableRoles.map((role) => (
                               <SelectItem key={role.id} value={role.name}>
-                                <span className="capitalize text-xs">{role.name.replace(/_/g, ' ')}</span>
+                                <span className="capitalize text-xs">
+                                  {role.name.replace(/_/g, ' ')}
+                                </span>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -509,7 +544,9 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
               })}
             </div>
           ) : (
-            <div className="p-8 text-center text-slate-500">No members found in this workspace.</div>
+            <div className="p-8 text-center text-slate-500">
+              No members found in this workspace.
+            </div>
           )}
         </CardContent>
       </Card>

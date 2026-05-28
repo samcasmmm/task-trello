@@ -69,12 +69,12 @@ function SubtaskItem({ task, level, onStatusChange }: SubtaskProps) {
 
   return (
     <div className={`space-y-1.5 ${computedMargin}`}>
-      <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg transition-colors border bg-[var(--surface-2)] border-[var(--border-subtle)] hover:border-[var(--border-default)]">
+      <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg transition-colors border bg-surface-2 border-border-subtle hover:border-border-default">
         {/* Expand toggle */}
         {hasChildren ? (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex-shrink-0 mt-0.5 transition-colors text-[var(--foreground-dim)]"
+            className="shrink-0 mt-0.5 transition-colors text-foreground-dim"
           >
             {isExpanded ? (
               <ChevronDown className="w-3.5 h-3.5" />
@@ -83,15 +83,15 @@ function SubtaskItem({ task, level, onStatusChange }: SubtaskProps) {
             )}
           </button>
         ) : (
-          <div className="flex-shrink-0 w-3.5 h-3.5 mt-0.5 flex items-center justify-center">
-            <div className="w-1 h-1 rounded-full bg-[var(--foreground-dim)]" />
+          <div className="shrink-0 w-3.5 h-3.5 mt-0.5 flex items-center justify-center">
+            <div className="w-1 h-1 rounded-full bg-foreground-dim" />
           </div>
         )}
 
         <div className="flex-1 min-w-0">
           <Link
             href={`/dashboard/task/${task.id}`}
-            className="text-xs font-medium block truncate transition-colors mb-1.5 text-[var(--foreground)] hover:text-[var(--foreground-muted)]"
+            className="text-xs font-medium block truncate transition-colors mb-1.5 text-foreground hover:text-foreground-muted"
           >
             {task.title}
           </Link>
@@ -107,12 +107,12 @@ function SubtaskItem({ task, level, onStatusChange }: SubtaskProps) {
                   {statusStyle.label}
                 </span>
               </SelectTrigger>
-              <SelectContent className="rounded-lg shadow-none bg-[var(--surface-2)] border border-[var(--border-default)]">
+              <SelectContent className="rounded-lg shadow-none bg-surface-2 border border-border-default">
                 {Object.entries(STATUS_STYLE).map(([key, val]) => (
                   <button
                     key={key}
                     value={key}
-                    className={`w-full text-left px-2 py-1.5 text-[11px] capitalize rounded-sm transition-colors hover:bg-[var(--surface-3)] ${val.color}`}
+                    className={`w-full text-left px-2 py-1.5 text-[11px] capitalize rounded-sm transition-colors hover:bg-surface-3 ${val.color}`}
                   >
                     {val.label}
                   </button>
@@ -123,20 +123,18 @@ function SubtaskItem({ task, level, onStatusChange }: SubtaskProps) {
             {/* Priority dot */}
             <div className="flex items-center gap-1">
               <div
-                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${PRIORITY_DOT[task.priority] || 'bg-[#444]'}`}
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${PRIORITY_DOT[task.priority] || 'bg-[#444]'}`}
               />
-              <span className="text-[10px] capitalize text-[var(--foreground-dim)]">
-                {task.priority}
-              </span>
+              <span className="text-[10px] capitalize text-foreground-dim">{task.priority}</span>
             </div>
 
             {task.due_date && (
-              <span className="text-[10px] font-mono text-[var(--foreground-dim)]">
+              <span className="text-[10px] font-mono text-foreground-dim">
                 {formatDate(task.due_date)}
               </span>
             )}
             {task.assignedTo && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--surface-3)] text-[var(--foreground-dim)] border border-[var(--border-subtle)]">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-surface-3 text-foreground-dim border border-border-subtle">
                 @{task.assignedTo.fullName}
               </span>
             )}
@@ -145,7 +143,7 @@ function SubtaskItem({ task, level, onStatusChange }: SubtaskProps) {
       </div>
 
       {isExpanded && hasChildren && (
-        <div className="space-y-1.5 pl-1 border-l border-[var(--border-subtle)]">
+        <div className="space-y-1.5 pl-1 border-l border-border-subtle">
           {task.children.map((sub: any) => (
             <SubtaskItem
               key={sub.id}
@@ -188,13 +186,13 @@ export default function SubtasksSection({
   const progress = subtasks.length > 0 ? Math.round((completedCount / subtasks.length) * 100) : 0;
 
   return (
-    <div className="rounded-xl overflow-hidden bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+    <div className="rounded-xl overflow-hidden bg-surface-2 border border-border-subtle">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--surface-1)]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-surface-1">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-[var(--foreground)]">Subtasks</span>
+          <span className="text-xs font-bold text-foreground">Subtasks</span>
           {subtasks.length > 0 && (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--surface-3)] text-[var(--foreground-dim)] border border-[var(--border-default)]">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-3 text-foreground-dim border border-border-default">
               {completedCount}/{subtasks.length}
             </span>
           )}
@@ -211,14 +209,14 @@ export default function SubtasksSection({
         {/* Progress bar */}
         {subtasks.length > 0 && (
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="flex-1 h-1 rounded-full overflow-hidden bg-[var(--surface-3)]">
+            <div className="flex-1 h-1 rounded-full overflow-hidden bg-surface-3">
               <div
                 className="h-full rounded-full transition-all duration-500 bg-[rgba(255,255,255,0.25)] data-[complete=true]:bg-[#6ee7b7]"
                 data-complete={progress === 100}
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <span className="text-[10px] font-semibold flex-shrink-0 text-[var(--foreground-dim)]">
+            <span className="text-[10px] font-semibold shrink-0 text-foreground-dim">
               {progress}%
             </span>
           </div>
@@ -226,8 +224,8 @@ export default function SubtasksSection({
 
         {subtasks.length === 0 ? (
           <div className="text-center py-6">
-            <CheckCircle className="w-7 h-7 mx-auto mb-2 text-[var(--foreground-dim)]" />
-            <p className="text-xs text-[var(--foreground-dim)]">No subtasks yet</p>
+            <CheckCircle className="w-7 h-7 mx-auto mb-2 text-foreground-dim" />
+            <p className="text-xs text-foreground-dim">No subtasks yet</p>
           </div>
         ) : (
           <div className="space-y-1.5">

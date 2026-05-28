@@ -1,20 +1,37 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, Shield, Users, GitMerge, Plus, ArrowRight, Settings, Sparkles } from 'lucide-react'
-import Link from 'next/link'
-import { toast } from 'sonner'
-import TeamMembersManager from '@/components/team-members-manager'
-import api from '@/lib/axios'
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import {
+  ChevronLeft,
+  Shield,
+  Users,
+  GitMerge,
+  Plus,
+  ArrowRight,
+  Settings,
+  Sparkles,
+} from 'lucide-react';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import TeamMembersManager from '@/components/team-members-manager';
+import api from '@/lib/axios';
 
 interface WorkspaceRole {
   id: string;
@@ -43,99 +60,97 @@ interface TeamMember {
 }
 
 export default function TenantSettingsPage() {
-  const params = useParams()
-  const router = useRouter()
-  const tenantId = params.tenantId as string
-  const [tenant, setTenant] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const params = useParams();
+  const router = useRouter();
+  const tenantId = params.tenantId as string;
+  const [tenant, setTenant] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // Custom Roles & Permissions states
-  const [rolesList, setRolesList] = useState<WorkspaceRole[]>([])
-  const [permissionsList, setPermissionsList] = useState<Permission[]>([])
-  const [newRole, setNewRole] = useState({ name: '', description: '' })
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
-  const [showRoleDialog, setShowRoleDialog] = useState(false)
-  const [rolesLoading, setRolesLoading] = useState(false)
+  const [rolesList, setRolesList] = useState<WorkspaceRole[]>([]);
+  const [permissionsList, setPermissionsList] = useState<Permission[]>([]);
+  const [newRole, setNewRole] = useState({ name: '', description: '' });
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [rolesLoading, setRolesLoading] = useState(false);
 
   // Hierarchy states
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   const fetchTenantData = async () => {
     try {
-      const response = await api.get(`/api/tenants/${tenantId}`)
-      setTenant(response.data)
+      const response = await api.get(`/api/tenants/${tenantId}`);
+      setTenant(response.data);
 
       // Fetch custom roles, system permissions, and members for the hierarchy
       const [rolesRes, permsRes, membersRes] = await Promise.all([
         api.get(`/api/tenants/${tenantId}/roles`),
         api.get('/api/permissions'),
         api.get(`/api/tenants/${tenantId}/members`),
-      ])
+      ]);
 
-      setRolesList(rolesRes.data)
-      setPermissionsList(permsRes.data)
-      setTeamMembers(membersRes.data)
+      setRolesList(rolesRes.data);
+      setPermissionsList(permsRes.data);
+      setTeamMembers(membersRes.data);
     } catch (error) {
-      console.error('Error fetching tenant details:', error)
-      router.push('/dashboard')
+      console.error('Error fetching tenant details:', error);
+      router.push('/dashboard');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTenantData()
-  }, [tenantId])
+    fetchTenantData();
+  }, [tenantId]);
 
   const handleCreateRole = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!newRole.name.trim()) {
-      toast.error('Role name is required.')
-      return
+      toast.error('Role name is required.');
+      return;
     }
 
-    setRolesLoading(true)
+    setRolesLoading(true);
     try {
       await api.post(`/api/tenants/${tenantId}/roles`, {
         name: newRole.name.trim().toLowerCase().replace(/\s+/g, '_'),
         description: newRole.description,
         permissionIds: selectedPermissions,
-      })
+      });
 
-      toast.success(`Custom role "${newRole.name}" created successfully!`)
-      setNewRole({ name: '', description: '' })
-      setSelectedPermissions([])
-      setShowRoleDialog(false)
-      fetchTenantData()
+      toast.success(`Custom role "${newRole.name}" created successfully!`);
+      setNewRole({ name: '', description: '' });
+      setSelectedPermissions([]);
+      setShowRoleDialog(false);
+      fetchTenantData();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create role.'
-      toast.error(errorMessage)
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create role.';
+      toast.error(errorMessage);
     } finally {
-      setRolesLoading(false)
+      setRolesLoading(false);
     }
-  }
+  };
 
   const togglePermission = (permId: string) => {
     if (selectedPermissions.includes(permId)) {
-      setSelectedPermissions(selectedPermissions.filter((id) => id !== permId))
+      setSelectedPermissions(selectedPermissions.filter((id) => id !== permId));
     } else {
-      setSelectedPermissions([...selectedPermissions, permId])
+      setSelectedPermissions([...selectedPermissions, permId]);
     }
-  }
+  };
 
   // Recursive renderer for the reporting hierarchy organogram tree
   const renderHierarchyNode = (userId: string, depth = 0) => {
-    const member = teamMembers.find((m) => m.user.id === userId)
-    if (!member) return null
+    const member = teamMembers.find((m) => m.user.id === userId);
+    if (!member) return null;
 
-    const reports = teamMembers.filter((m) => m.reportsToId === userId)
+    const reports = teamMembers.filter((m) => m.reportsToId === userId);
 
     return (
       <div key={userId} className="space-y-4 relative pl-6 md:pl-10">
         {/* Visual node line guideline */}
-        {depth > 0 && (
-          <div className="absolute left-0 top-6 w-6 md:w-10 h-[1.5px] bg-slate-300" />
-        )}
+        {depth > 0 && <div className="absolute left-0 top-6 w-6 md:w-10 h-[1.5px] bg-slate-300" />}
         <div className="absolute left-0 top-0 w-[1.5px] h-full bg-slate-200" />
 
         {/* Member visualization card */}
@@ -169,11 +184,11 @@ export default function TenantSettingsPage() {
           </div>
         )}
       </div>
-    )
-  }
+    );
+  };
 
   // Top level employees are those who don't report to anyone in the workspace
-  const topLevelMembers = teamMembers.filter((m) => !m.reportsToId)
+  const topLevelMembers = teamMembers.filter((m) => !m.reportsToId);
 
   if (loading) {
     return (
@@ -185,16 +200,19 @@ export default function TenantSettingsPage() {
           <p className="text-sm text-slate-500">Loading workspace configurations...</p>
         </div>
       </div>
-    )
+    );
   }
 
-  if (!tenant) return null
+  if (!tenant) return null;
 
   return (
     <div className="space-y-6">
       {/* Header breadcrumb */}
       <Link href={`/dashboard/tenant/${tenantId}`}>
-        <Button variant="ghost" className="gap-2 pl-0 hover:pl-0 text-slate-600 hover:text-slate-900">
+        <Button
+          variant="ghost"
+          className="gap-2 pl-0 hover:pl-0 text-slate-600 hover:text-slate-900"
+        >
           <ChevronLeft className="w-4 h-4" />
           Back to Workspace
         </Button>
@@ -283,20 +301,30 @@ export default function TenantSettingsPage() {
                     </div>
 
                     <div className="space-y-2 border-t pt-3">
-                      <label className="text-sm font-bold text-slate-800 block mb-2">Assign Permissions</label>
+                      <label className="text-sm font-bold text-slate-800 block mb-2">
+                        Assign Permissions
+                      </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-1">
                         {permissionsList.map((perm) => (
-                          <div key={perm.id} className="flex items-start gap-2 p-2 bg-slate-50 rounded border border-slate-100 hover:bg-slate-100/50 transition-colors">
+                          <div
+                            key={perm.id}
+                            className="flex items-start gap-2 p-2 bg-slate-50 rounded border border-slate-100 hover:bg-slate-100/50 transition-colors"
+                          >
                             <Checkbox
                               id={perm.id}
                               checked={selectedPermissions.includes(perm.id)}
                               onCheckedChange={() => togglePermission(perm.id)}
                             />
                             <div className="grid gap-0.5 leading-none">
-                              <label htmlFor={perm.id} className="text-xs font-bold text-slate-800 cursor-pointer capitalize">
+                              <label
+                                htmlFor={perm.id}
+                                className="text-xs font-bold text-slate-800 cursor-pointer capitalize"
+                              >
                                 {perm.name.replace(/_/g, ' ')}
                               </label>
-                              <span className="text-[10px] text-slate-500 leading-normal">{perm.description}</span>
+                              <span className="text-[10px] text-slate-500 leading-normal">
+                                {perm.description}
+                              </span>
                             </div>
                           </div>
                         ))}
@@ -315,28 +343,45 @@ export default function TenantSettingsPage() {
             <CardContent className="pt-6">
               <div className="grid gap-4 md:grid-cols-2">
                 {rolesList.map((role) => (
-                  <Card key={role.id} className="relative overflow-hidden border border-slate-100 hover:shadow-md transition-shadow">
-                    <div className={`absolute left-0 top-0 h-full w-1 ${role.tenantId ? 'bg-amber-500' : 'bg-slate-800'}`} />
+                  <Card
+                    key={role.id}
+                    className="relative overflow-hidden border border-slate-100 hover:shadow-md transition-shadow"
+                  >
+                    <div
+                      className={`absolute left-0 top-0 h-full w-1 ${role.tenantId ? 'bg-amber-500' : 'bg-slate-800'}`}
+                    />
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-base font-extrabold capitalize text-slate-900 flex items-center gap-1.5">
                           {role.name.replace(/_/g, ' ')}
                           {role.tenantId ? (
-                            <Badge className="bg-amber-100 text-amber-800 border border-amber-200 shadow-none text-[9px] py-0">Custom</Badge>
+                            <Badge className="bg-amber-100 text-amber-800 border border-amber-200 shadow-none text-[9px] py-0">
+                              Custom
+                            </Badge>
                           ) : (
-                            <Badge className="bg-slate-100 text-slate-800 border border-slate-200 shadow-none text-[9px] py-0">System Role</Badge>
+                            <Badge className="bg-slate-100 text-slate-800 border border-slate-200 shadow-none text-[9px] py-0">
+                              System Role
+                            </Badge>
                           )}
                         </CardTitle>
                       </div>
-                      <CardDescription className="text-xs">{role.description || 'No description provided.'}</CardDescription>
+                      <CardDescription className="text-xs">
+                        {role.description || 'No description provided.'}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="text-xs text-slate-600 space-y-2">
                       <div>
-                        <span className="font-semibold text-slate-800 block mb-1">Permissions assigned:</span>
+                        <span className="font-semibold text-slate-800 block mb-1">
+                          Permissions assigned:
+                        </span>
                         <div className="flex flex-wrap gap-1">
                           {role.permissions && role.permissions.length > 0 ? (
                             role.permissions.map((p) => (
-                              <Badge key={p} variant="secondary" className="text-[9px] capitalize shadow-none">
+                              <Badge
+                                key={p}
+                                variant="secondary"
+                                className="text-[9px] capitalize shadow-none"
+                              >
                                 {p.replace(/_/g, ' ')}
                               </Badge>
                             ))
@@ -362,7 +407,8 @@ export default function TenantSettingsPage() {
                 Team Reporting Structure
               </CardTitle>
               <CardDescription>
-                Visual organogram demonstrating the reporting relationships and workflow chains of command.
+                Visual organogram demonstrating the reporting relationships and workflow chains of
+                command.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -384,7 +430,9 @@ export default function TenantSettingsPage() {
                             <Badge className="text-[9px] px-1.5 py-0 capitalize bg-slate-800 text-white border border-slate-700 shadow-none font-bold">
                               {member.role.replace(/_/g, ' ')}
                             </Badge>
-                            <Badge className="text-[8px] bg-blue-600 text-white font-mono shadow-none uppercase font-bold py-0.5 px-1.5">Head</Badge>
+                            <Badge className="text-[8px] bg-blue-600 text-white font-mono shadow-none uppercase font-bold py-0.5 px-1.5">
+                              Head
+                            </Badge>
                           </h4>
                           <p className="text-[11px] text-slate-400">{member.user.email}</p>
                         </div>
@@ -401,7 +449,8 @@ export default function TenantSettingsPage() {
                 </div>
               ) : (
                 <div className="p-8 text-center text-slate-500">
-                  No reporting relationships have been configured yet. Map managers in the Team Directory.
+                  No reporting relationships have been configured yet. Map managers in the Team
+                  Directory.
                 </div>
               )}
             </CardContent>
@@ -409,5 +458,5 @@ export default function TenantSettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

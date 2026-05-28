@@ -1,6 +1,6 @@
-import postgres from 'postgres'
-import { drizzle } from 'drizzle-orm/postgres-js'
-import { and, eq, or, sql, asc, desc, inArray, isNull } from 'drizzle-orm'
+import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { and, eq, or, sql, asc, desc, inArray, isNull } from 'drizzle-orm';
 import {
   users,
   tenants,
@@ -22,17 +22,17 @@ import {
   labels,
   taskLabels,
   taskMembers,
-} from '@/db/schema'
+} from '@/db/schema';
 
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL;
 
 if (!connectionString) {
-  throw new Error('DATABASE_URL is not set')
+  throw new Error('DATABASE_URL is not set');
 }
 
 const client = postgres(connectionString, {
   max: 10,
-})
+});
 
 export const db = drizzle(client, {
   schema: {
@@ -57,7 +57,7 @@ export const db = drizzle(client, {
     taskLabels,
     taskMembers,
   },
-})
+});
 
 export {
   users,
@@ -87,6 +87,6 @@ export {
   desc,
   inArray,
   isNull,
-}
+};
 
-export default db
+export default db;

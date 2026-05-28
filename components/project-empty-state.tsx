@@ -11,12 +11,12 @@ interface ProjectEmptyStateProps {
 
 export default function ProjectEmptyState({ projectId, onTaskCreated }: ProjectEmptyStateProps) {
   return (
-    <div className="rounded-lg py-20 text-center bg-[var(--surface-2)] border border-dashed border-[var(--border-default)]">
-      <div className="w-12 h-12 rounded-lg mx-auto mb-4 flex items-center justify-center bg-[var(--surface-3)] border border-[var(--border-strong)]">
-        <LayoutGrid className="w-6 h-6 text-[var(--foreground-dim)]" />
+    <div className="rounded-lg py-20 text-center bg-surface-2 border border-dashed border-border-default">
+      <div className="w-12 h-12 rounded-lg mx-auto mb-4 flex items-center justify-center bg-surface-3 border border-border-strong">
+        <LayoutGrid className="w-6 h-6 text-foreground-dim" />
       </div>
-      <h3 className="text-sm font-bold mb-2 text-[var(--foreground)]">No tasks yet</h3>
-      <p className="text-xs mb-5 text-[var(--foreground-muted)]">
+      <h3 className="text-sm font-bold mb-2 text-foreground">No tasks yet</h3>
+      <p className="text-xs mb-5 text-foreground-muted">
         Create your first task to start building your project workflow.
       </p>
       <CreateTaskDialog projectId={projectId} onSuccess={onTaskCreated}>

@@ -1,16 +1,17 @@
-import { NextResponse } from 'next/server'
-import { requireAuth, getUserRoles } from '@/lib/api-auth'
-import db, { auditLogs, users, eq, desc } from '@/lib/drizzle'
+import { NextResponse } from 'next/server';
+import { requireAuth, getUserRoles } from '@/lib/api-auth';
+import db, { auditLogs, users, eq, desc } from '@/lib/drizzle';
 
 // Assert Super Admin access
 async function assertSuperAdmin() {
-  const authContext = await requireAuth()
-  const assignedRoles = await getUserRoles(authContext.userId)
-  const isSuperAdmin = assignedRoles.includes('r-super-admin') || assignedRoles.includes('super_admin')
+  const authContext = await requireAuth();
+  const assignedRoles = await getUserRoles(authContext.userId);
+  const isSuperAdmin =
+    assignedRoles.includes('r-super-admin') || assignedRoles.includes('super_admin');
   if (!isSuperAdmin) {
-    throw new Error('Forbidden')
+    throw new Error('Forbidden');
   }
-  return authContext
+  return authContext;
 }
 
 /**
@@ -18,7 +19,7 @@ async function assertSuperAdmin() {
  */
 export async function GET() {
   try {
-    await assertSuperAdmin()
+    await assertSuperAdmin();
 
     // Query Drizzle joining audit logs and users
     const logs = await db
@@ -35,14 +36,14 @@ export async function GET() {
       .leftJoin(users, eq(auditLogs.userId, users.id))
       .orderBy(desc(auditLogs.createdAt))
       .limit(100)
-      .execute()
+      .execute();
 
-    return NextResponse.json(logs)
+    return NextResponse.json(logs);
   } catch (error: any) {
-    console.error('Admin logs GET error:', error)
+    console.error('Admin logs GET error:', error);
     return NextResponse.json(
       { error: error.message || 'Unauthorized' },
-      { status: error.message === 'Forbidden' ? 403 : 401 }
-    )
+      { status: error.message === 'Forbidden' ? 403 : 401 },
+    );
   }
 }

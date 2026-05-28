@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/api-auth'
-import db, { eq, projects, tenants, tenantMembers, sql, inArray } from '@/lib/drizzle'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/api-auth';
+import db, { eq, projects, tenants, tenantMembers, sql, inArray } from '@/lib/drizzle';
 
 /**
  * GET /api/tenants - Get all tenants for the current user
  */
 export async function GET() {
   try {
-    const authContext = await requireAuth()
+    const authContext = await requireAuth();
 
     const tenantRows = await db
       .select({
@@ -23,13 +23,13 @@ export async function GET() {
       .from(tenants)
       .innerJoin(tenantMembers, eq(tenantMembers.tenantId, tenants.id))
       .where(eq(tenantMembers.userId, authContext.userId))
-      .execute()
+      .execute();
 
     if (tenantRows.length === 0) {
-      return NextResponse.json([])
+      return NextResponse.json([]);
     }
 
-    const tenantIds = tenantRows.map((tenant) => tenant.id)
+    const tenantIds = tenantRows.map((tenant) => tenant.id);
 
     const memberCountRows = await db
       .select({
@@ -39,7 +39,7 @@ export async function GET() {
       .from(tenantMembers)
       .where(inArray(tenantMembers.tenantId, tenantIds))
       .groupBy(tenantMembers.tenantId)
-      .execute()
+      .execute();
 
     const projectCountRows = await db
       .select({
@@ -49,10 +49,12 @@ export async function GET() {
       .from(projects)
       .where(inArray(projects.tenantId, tenantIds))
       .groupBy(projects.tenantId)
-      .execute()
+      .execute();
 
-    const memberCountMap = new Map(memberCountRows.map((row) => [row.tenantId, Number(row.count)]))
-    const projectCountMap = new Map(projectCountRows.map((row) => [row.tenantId, Number(row.count)]))
+    const memberCountMap = new Map(memberCountRows.map((row) => [row.tenantId, Number(row.count)]));
+    const projectCountMap = new Map(
+      projectCountRows.map((row) => [row.tenantId, Number(row.count)]),
+    );
 
     const tenantsWithCounts = tenantRows.map((tenant) => ({
       ...tenant,
@@ -60,14 +62,14 @@ export async function GET() {
         members: memberCountMap.get(tenant.id) ?? 0,
         projects: projectCountMap.get(tenant.id) ?? 0,
       },
-    }))
+    }));
 
-    return NextResponse.json(tenantsWithCounts)
+    return NextResponse.json(tenantsWithCounts);
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
 
@@ -76,16 +78,13 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const authContext = await requireAuth()
-    const body = await request.json()
+    const authContext = await requireAuth();
+    const body = await request.json();
 
-    const { name, slug, description, logoUrl } = body
+    const { name, slug, description, logoUrl } = body;
 
     if (!name || !slug) {
-      return NextResponse.json(
-        { error: 'Name and slug are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
     }
 
     const [tenant] = await db.transaction(async (tx) => {
@@ -101,7 +100,7 @@ export async function POST(request: NextRequest) {
           createdAt: new Date(),
           updatedAt: new Date(),
         })
-        .returning()
+        .returning();
 
       await tx.insert(tenantMembers).values({
         id: crypto.randomUUID(),
@@ -110,10 +109,10 @@ export async function POST(request: NextRequest) {
         role: 'owner',
         joinedAt: new Date(),
         updatedAt: new Date(),
-      })
+      });
 
-      return [created]
-    })
+      return [created];
+    });
 
     return NextResponse.json(
       {
@@ -123,13 +122,12 @@ export async function POST(request: NextRequest) {
           projects: 0,
         },
       },
-      { status: 201 }
-    )
+      { status: 201 },
+    );
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
-

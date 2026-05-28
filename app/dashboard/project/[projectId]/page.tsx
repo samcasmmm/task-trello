@@ -111,18 +111,14 @@ export default function ProjectPage() {
       <div className="flex items-center justify-center h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin" />
-          <p className="text-[11px] text-[var(--foreground-dim)]">Loading project...</p>
+          <p className="text-[11px] text-foreground-dim">Loading project...</p>
         </div>
       </div>
     );
   }
 
   if (!project) {
-    return (
-      <div className="text-center py-20 text-sm text-[var(--foreground-muted)]">
-        Project not found
-      </div>
-    );
+    return <div className="text-center py-20 text-sm text-foreground-muted">Project not found</div>;
   }
 
   const doneTasks = tasks.filter((t) => t.status === 'done').length;
@@ -132,43 +128,36 @@ export default function ProjectPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-[11px]">
-        <Link
-          href="/dashboard"
-          className="hover:text-white transition-colors text-[var(--foreground-dim)]"
-        >
+        <Link href="/dashboard" className="hover:text-white transition-colors text-foreground-dim">
           Dashboard
         </Link>
-        <span className="text-[var(--foreground-dim)]">/</span>
-        <span className="font-medium text-[var(--foreground-muted)]">{project.name}</span>
+        <span className="text-foreground-dim">/</span>
+        <span className="font-medium text-foreground-muted">{project.name}</span>
       </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[var(--border-subtle)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border-subtle">
         <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--foreground)]">
-            {project.name}
-          </h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-foreground">{project.name}</h1>
           {project.description && (
-            <p className="text-xs mt-1 max-w-xl text-[var(--foreground-muted)]">
-              {project.description}
-            </p>
+            <p className="text-xs mt-1 max-w-xl text-foreground-muted">{project.description}</p>
           )}
           {tasks.length > 0 && (
             <div className="flex items-center gap-2.5 mt-3">
-              <div className="w-32 h-1 rounded-full overflow-hidden bg-[var(--surface-3)]">
+              <div className="w-32 h-1 rounded-full overflow-hidden bg-surface-3">
                 <div
                   className="h-full rounded-full transition-all duration-500 bg-[rgba(255,255,255,0.3)] data-[complete=true]:bg-[#6ee7b7]"
                   data-complete={progress === 100}
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className="text-[10px] font-semibold text-[var(--foreground-dim)]">
+              <span className="text-[10px] font-semibold text-foreground-dim">
                 {doneTasks}/{tasks.length} done
               </span>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             size="sm"
             onClick={() => setShowAnalytics(!showAnalytics)}
@@ -200,7 +189,7 @@ export default function ProjectPage() {
 
       {/* View tabs & Action panel */}
       <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+        <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-2 border border-border-subtle">
           {VIEWS.map(({ key, label, Icon }) => {
             const isActive = activeView === key;
             return (
@@ -208,9 +197,7 @@ export default function ProjectPage() {
                 key={key}
                 onClick={() => setActiveView(key as any)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-[var(--surface-3)] text-[var(--foreground)]'
-                    : 'bg-transparent text-[var(--foreground-dim)]'
+                  isActive ? 'bg-surface-3 text-foreground' : 'bg-transparent text-foreground-dim'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -219,7 +206,7 @@ export default function ProjectPage() {
             );
           })}
         </div>
-        <span className="text-[11px] font-medium text-[var(--foreground-dim)]">
+        <span className="text-[11px] font-medium text-foreground-dim">
           {tasks.length} task{tasks.length !== 1 ? 's' : ''}
         </span>
       </div>

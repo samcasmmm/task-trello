@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, verifyTenantAccess } from '@/lib/api-auth'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, verifyTenantAccess } from '@/lib/api-auth';
 import db, {
   projects,
   tasks,
@@ -12,36 +12,44 @@ import db, {
   sql,
   isNull,
   desc,
-} from '@/lib/drizzle'
+} from '@/lib/drizzle';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ tenantId: string }> }
+  { params }: { params: Promise<{ tenantId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { tenantId } = await params
+    const authContext = await requireAuth();
+    const { tenantId } = await params;
 
     // Verify tenant access
-    const hasAccess = await verifyTenantAccess(authContext.userId, tenantId)
+    const hasAccess = await verifyTenantAccess(authContext.userId, tenantId);
     if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const now = new Date()
-    const startOfToday = new Date(now)
-    startOfToday.setHours(0, 0, 0, 0)
-    const endOfToday = new Date(now)
-    endOfToday.setHours(23, 59, 59, 999)
-    const startOfTodayIso = startOfToday.toISOString()
-    const endOfTodayIso = endOfToday.toISOString()
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999);
+    const startOfTodayIso = startOfToday.toISOString();
+    const endOfTodayIso = endOfToday.toISOString();
 
-    const sevenDaysAgo = new Date(startOfToday)
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
-    const sevenDaysAgoIso = sevenDaysAgo.toISOString()
+    const sevenDaysAgo = new Date(startOfToday);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const sevenDaysAgoIso = sevenDaysAgo.toISOString();
 
     // Run all independent queries in parallel
-    const [projectCountRow, aggregateTaskStatsRows, statusCountsRows, priorityCountsRows, createdTrendRows, completedTrendRows, memberCountRow] = await Promise.all([
+    const [
+      projectCountRow,
+      aggregateTaskStatsRows,
+      statusCountsRows,
+      priorityCountsRows,
+      createdTrendRows,
+      completedTrendRows,
+      memberCountRow,
+    ] = await Promise.all([
       // 1. Project count
       db
         .select({ count: sql<number>`count(*)` })
@@ -59,12 +67,7 @@ export async function GET(
         })
         .from(tasks)
         .innerJoin(projects, eq(tasks.projectId, projects.id))
-        .where(
-          and(
-            eq(projects.tenantId, tenantId),
-            isNull(tasks.deletedAt)
-          )
-        )
+        .where(and(eq(projects.tenantId, tenantId), isNull(tasks.deletedAt)))
         .execute(),
 
       // 3. Tasks by Status
@@ -72,12 +75,7 @@ export async function GET(
         .select({ status: tasks.status, count: sql<number>`count(*)` })
         .from(tasks)
         .innerJoin(projects, eq(tasks.projectId, projects.id))
-        .where(
-          and(
-            eq(projects.tenantId, tenantId),
-            isNull(tasks.deletedAt)
-          )
-        )
+        .where(and(eq(projects.tenantId, tenantId), isNull(tasks.deletedAt)))
         .groupBy(tasks.status)
         .execute(),
 
@@ -86,12 +84,7 @@ export async function GET(
         .select({ priority: tasks.priority, count: sql<number>`count(*)` })
         .from(tasks)
         .innerJoin(projects, eq(tasks.projectId, projects.id))
-        .where(
-          and(
-            eq(projects.tenantId, tenantId),
-            isNull(tasks.deletedAt)
-          )
-        )
+        .where(and(eq(projects.tenantId, tenantId), isNull(tasks.deletedAt)))
         .groupBy(tasks.priority)
         .execute(),
 
@@ -108,8 +101,8 @@ export async function GET(
             eq(projects.tenantId, tenantId),
             isNull(tasks.deletedAt),
             sql`${tasks.createdAt} >= ${sevenDaysAgoIso}`,
-            sql`${tasks.createdAt} <= ${endOfTodayIso}`
-          )
+            sql`${tasks.createdAt} <= ${endOfTodayIso}`,
+          ),
         )
         .groupBy(sql`date_trunc('day', ${tasks.createdAt})`)
         .orderBy(sql`date_trunc('day', ${tasks.createdAt})`)
@@ -129,8 +122,8 @@ export async function GET(
             isNull(tasks.deletedAt),
             eq(tasks.status, 'done'),
             sql`${tasks.updatedAt} >= ${sevenDaysAgoIso}`,
-            sql`${tasks.updatedAt} <= ${endOfTodayIso}`
-          )
+            sql`${tasks.updatedAt} <= ${endOfTodayIso}`,
+          ),
         )
         .groupBy(sql`date_trunc('day', ${tasks.updatedAt})`)
         .orderBy(sql`date_trunc('day', ${tasks.updatedAt})`)
@@ -142,47 +135,53 @@ export async function GET(
         .from(tenantMembers)
         .where(eq(tenantMembers.tenantId, tenantId))
         .execute(),
-    ])
+    ]);
 
-    const totalProjects = Number(projectCountRow[0]?.count ?? 0)
-    const aggregateStats = aggregateTaskStatsRows[0]
-    const totalTasks = Number(aggregateStats?.totalTasks ?? 0)
-    const tasksDueToday = Number(aggregateStats?.tasksDueToday ?? 0)
-    const overdueTasks = Number(aggregateStats?.overdueTasks ?? 0)
-    const completedTasks = Number(aggregateStats?.completedTasks ?? 0)
-    const activeMembers = Number(memberCountRow[0]?.count ?? 0)
+    const totalProjects = Number(projectCountRow[0]?.count ?? 0);
+    const aggregateStats = aggregateTaskStatsRows[0];
+    const totalTasks = Number(aggregateStats?.totalTasks ?? 0);
+    const tasksDueToday = Number(aggregateStats?.tasksDueToday ?? 0);
+    const overdueTasks = Number(aggregateStats?.overdueTasks ?? 0);
+    const completedTasks = Number(aggregateStats?.completedTasks ?? 0);
+    const activeMembers = Number(memberCountRow[0]?.count ?? 0);
 
-    const tasksByStatus = statusCountsRows.map((r) => ({ status: r.status, count: Number(r.count) }))
-    const tasksByPriority = priorityCountsRows.map((r) => ({ priority: r.priority, count: Number(r.count) }))
+    const tasksByStatus = statusCountsRows.map((r) => ({
+      status: r.status,
+      count: Number(r.count),
+    }));
+    const tasksByPriority = priorityCountsRows.map((r) => ({
+      priority: r.priority,
+      count: Number(r.count),
+    }));
 
     // Process trends
     const createdMap = new Map(
       createdTrendRows.map((row) => [
         new Date(row.day).toISOString().slice(0, 10),
         Number(row.count),
-      ])
-    )
+      ]),
+    );
     const completedMap = new Map(
       completedTrendRows.map((row) => [
         new Date(row.day).toISOString().slice(0, 10),
         Number(row.count),
-      ])
-    )
+      ]),
+    );
 
-    const trendData = []
+    const trendData = [];
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(startOfToday)
-      d.setDate(d.getDate() - i)
-      const key = d.toISOString().slice(0, 10)
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })
+      const d = new Date(startOfToday);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
 
       trendData.push({
         name: dayName,
         created: createdMap.get(key) ?? 0,
         completed: completedMap.get(key) ?? 0,
-      })
+      });
     }
-    const completionTrend = trendData
+    const completionTrend = trendData;
 
     // Get recent activities (get user IDs and activities in one query using subquery)
     const recentActivities = await db
@@ -203,12 +202,12 @@ export async function GET(
           db
             .select({ userId: tenantMembers.userId })
             .from(tenantMembers)
-            .where(eq(tenantMembers.tenantId, tenantId))
-        )
+            .where(eq(tenantMembers.tenantId, tenantId)),
+        ),
       )
       .orderBy(desc(auditLogs.createdAt))
       .limit(5)
-      .execute()
+      .execute();
 
     return NextResponse.json({
       totalProjects,
@@ -221,13 +220,12 @@ export async function GET(
       tasksByPriority,
       completionTrend,
       recentActivities,
-    })
+    });
   } catch (error: any) {
-    console.error('Tenant stats API error:', error)
+    console.error('Tenant stats API error:', error);
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
-

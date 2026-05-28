@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, verifyTenantAccess, canAssignTasks } from '@/lib/api-auth'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, verifyTenantAccess, canAssignTasks } from '@/lib/api-auth';
 import db, {
   tasks,
   projects,
@@ -14,51 +14,51 @@ import db, {
   desc,
   asc,
   isNull,
-} from '@/lib/drizzle'
-import { createAuditLog } from '@/lib/audit'
-import { createNotification } from '@/lib/notification'
+} from '@/lib/drizzle';
+import { createAuditLog } from '@/lib/audit';
+import { createNotification } from '@/lib/notification';
 
 /**
  * GET /api/tasks/[taskId] - Get task details with all relations
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ taskId: string }> }
+  { params }: { params: Promise<{ taskId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { taskId } = await params
+    const authContext = await requireAuth();
+    const { taskId } = await params;
 
     const task = await db.query.tasks.findFirst({
       where: eq(tasks.id, taskId),
-    })
+    });
 
     if (!task) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const project = await db.query.projects.findFirst({
       where: eq(projects.id, task.projectId),
-    })
+    });
 
     if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const hasAccess = await verifyTenantAccess(authContext.userId, project.tenantId)
+    const hasAccess = await verifyTenantAccess(authContext.userId, project.tenantId);
     if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const [assignedTo] = task.assignedToId
       ? await db.query.users.findMany({
-        where: eq(users.id, task.assignedToId),
-      })
-      : [null]
+          where: eq(users.id, task.assignedToId),
+        })
+      : [null];
 
     const [createdBy] = await db.query.users.findMany({
       where: eq(users.id, task.createdById),
-    })
+    });
 
     const commentRows = await db
       .select({
@@ -75,7 +75,7 @@ export async function GET(
       .leftJoin(users, eq(taskComments.userId, users.id))
       .where(eq(taskComments.taskId, taskId))
       .orderBy(desc(taskComments.createdAt))
-      .execute()
+      .execute();
 
     const comments = commentRows.map((row) => ({
       id: row.id,
@@ -88,14 +88,14 @@ export async function GET(
         fullName: row.fullName,
         avatarUrl: row.avatarUrl,
       },
-    }))
+    }));
 
     const checklists = await db
       .select()
       .from(taskChecklist)
       .where(eq(taskChecklist.taskId, taskId))
       .orderBy(asc(taskChecklist.orderIndex))
-      .execute()
+      .execute();
 
     const attachmentRows = await db
       .select({
@@ -112,7 +112,7 @@ export async function GET(
       .from(taskAttachments)
       .leftJoin(users, eq(taskAttachments.uploadedById, users.id))
       .where(eq(taskAttachments.taskId, taskId))
-      .execute()
+      .execute();
 
     const attachments = attachmentRows.map((row) => ({
       id: row.id,
@@ -126,7 +126,7 @@ export async function GET(
         email: row.email,
         fullName: row.fullName,
       },
-    }))
+    }));
 
     const customFieldRows = await db
       .select({
@@ -140,7 +140,7 @@ export async function GET(
       .from(taskCustomFieldValues)
       .leftJoin(customFields, eq(taskCustomFieldValues.customFieldId, customFields.id))
       .where(eq(taskCustomFieldValues.taskId, taskId))
-      .execute()
+      .execute();
 
     const customFieldValues = customFieldRows.map((row) => ({
       id: row.id,
@@ -151,7 +151,7 @@ export async function GET(
         fieldType: row.fieldType,
         options: row.fieldOptions,
       },
-    }))
+    }));
 
     const subtaskRows = await db
       .select({
@@ -170,13 +170,8 @@ export async function GET(
       })
       .from(tasks)
       .leftJoin(users, eq(tasks.assignedToId, users.id))
-      .where(
-        and(
-          eq(tasks.parentTaskId, taskId),
-          isNull(tasks.deletedAt)
-        )
-      )
-      .execute()
+      .where(and(eq(tasks.parentTaskId, taskId), isNull(tasks.deletedAt)))
+      .execute();
 
     const subtasks = subtaskRows.map((row) => ({
       id: row.id,
@@ -188,59 +183,56 @@ export async function GET(
       updatedAt: row.updatedAt,
       assignedTo: row.assignedToId
         ? {
-          id: row.userId,
-          email: row.email,
-          fullName: row.fullName,
-        }
+            id: row.userId,
+            email: row.email,
+            fullName: row.fullName,
+          }
         : null,
-    }))
+    }));
 
     return NextResponse.json({
       ...task,
       project_id: task.projectId,
       assignedTo: assignedTo
         ? {
-          id: assignedTo.id,
-          email: assignedTo.email,
-          fullName: assignedTo.fullName,
-          avatarUrl: assignedTo.avatarUrl,
-        }
+            id: assignedTo.id,
+            email: assignedTo.email,
+            fullName: assignedTo.fullName,
+            avatarUrl: assignedTo.avatarUrl,
+          }
         : null,
       assigned_to_user: assignedTo
         ? {
-          id: assignedTo.id,
-          email: assignedTo.email,
-          fullName: assignedTo.fullName,
-          avatarUrl: assignedTo.avatarUrl,
-        }
+            id: assignedTo.id,
+            email: assignedTo.email,
+            fullName: assignedTo.fullName,
+            avatarUrl: assignedTo.avatarUrl,
+          }
         : null,
       created_by_user: createdBy
         ? {
-          id: createdBy.id,
-          email: createdBy.email,
-          fullName: createdBy.fullName,
-        }
+            id: createdBy.id,
+            email: createdBy.email,
+            fullName: createdBy.fullName,
+          }
         : null,
       task_comments: comments,
       task_checklists: checklists,
       task_attachments: attachments,
       task_custom_field_values: customFieldValues,
       subtasks,
-    })
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
 
 async function propagateAssignee(parentTaskId: string, newAssigneeId: string | null) {
   const subtasksList = await db.query.tasks.findMany({
-    where: and(
-      eq(tasks.parentTaskId, parentTaskId),
-      isNull(tasks.deletedAt)
-    )
+    where: and(eq(tasks.parentTaskId, parentTaskId), isNull(tasks.deletedAt)),
   });
 
   if (subtasksList.length === 0) return;
@@ -249,14 +241,9 @@ async function propagateAssignee(parentTaskId: string, newAssigneeId: string | n
     .update(tasks)
     .set({
       assignedToId: newAssigneeId,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
-    .where(
-      and(
-        eq(tasks.parentTaskId, parentTaskId),
-        isNull(tasks.deletedAt)
-      )
-    );
+    .where(and(eq(tasks.parentTaskId, parentTaskId), isNull(tasks.deletedAt)));
 
   for (const sub of subtasksList) {
     await propagateAssignee(sub.id, newAssigneeId);
@@ -268,34 +255,34 @@ async function propagateAssignee(parentTaskId: string, newAssigneeId: string | n
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ taskId: string }> }
+  { params }: { params: Promise<{ taskId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { taskId } = await params
+    const authContext = await requireAuth();
+    const { taskId } = await params;
 
     const task = await db.query.tasks.findFirst({
       where: eq(tasks.id, taskId),
-    })
+    });
 
     if (!task) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const project = await db.query.projects.findFirst({
       where: eq(projects.id, task.projectId),
-    })
+    });
 
     if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const hasAccess = await verifyTenantAccess(authContext.userId, project.tenantId)
+    const hasAccess = await verifyTenantAccess(authContext.userId, project.tenantId);
     if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await request.json()
+    const body = await request.json();
     const {
       title,
       description,
@@ -305,8 +292,8 @@ export async function PATCH(
       dueDate,
       startDate,
       estimatedHours,
-      actualHours
-    } = body
+      actualHours,
+    } = body;
 
     const [updated] = await db
       .update(tasks)
@@ -315,15 +302,21 @@ export async function PATCH(
         description,
         status,
         priority,
-        assignedToId: assignedToId !== undefined ? (assignedToId || null) : undefined,
+        assignedToId: assignedToId !== undefined ? assignedToId || null : undefined,
         dueDate: dueDate !== undefined ? (dueDate ? new Date(dueDate) : null) : undefined,
         startDate: startDate !== undefined ? (startDate ? new Date(startDate) : null) : undefined,
-        estimatedHours: estimatedHours !== undefined ? (estimatedHours ? String(estimatedHours) : null) : undefined,
-        actualHours: actualHours !== undefined ? (actualHours ? String(actualHours) : null) : undefined,
+        estimatedHours:
+          estimatedHours !== undefined
+            ? estimatedHours
+              ? String(estimatedHours)
+              : null
+            : undefined,
+        actualHours:
+          actualHours !== undefined ? (actualHours ? String(actualHours) : null) : undefined,
         updatedAt: new Date(),
       })
       .where(eq(tasks.id, taskId))
-      .returning()
+      .returning();
 
     // Propagate assignee recursively to all subtasks if assignment changed
     if (assignedToId !== undefined && (assignedToId || null) !== task.assignedToId) {
@@ -334,8 +327,8 @@ export async function PATCH(
     if (assignedToId !== undefined && assignedToId !== task.assignedToId && assignedToId !== null) {
       await createNotification(
         assignedToId,
-        `You have been assigned to task: "${title || task.title}" in project "${project.name}".`
-      )
+        `You have been assigned to task: "${title || task.title}" in project "${project.name}".`,
+      );
     }
 
     // Trigger Notification for task completion
@@ -344,53 +337,57 @@ export async function PATCH(
       if (task.createdById && task.createdById !== authContext.userId) {
         await createNotification(
           task.createdById,
-          `Task completed: "${task.title}" has been completed.`
-        )
+          `Task completed: "${task.title}" has been completed.`,
+        );
       }
       // notify assignee
       if (task.assignedToId && task.assignedToId !== authContext.userId) {
         await createNotification(
           task.assignedToId,
-          `Task completed: "${task.title}" has been completed.`
-        )
+          `Task completed: "${task.title}" has been completed.`,
+        );
       }
     }
 
     // Trigger Audit Log
-    const changes: Record<string, any> = {}
-    if (title !== undefined && title !== task.title) changes.title = { old: task.title, new: title }
-    if (status !== undefined && status !== task.status) changes.status = { old: task.status, new: status }
-    if (assignedToId !== undefined && assignedToId !== task.assignedToId) changes.assignedToId = { old: task.assignedToId, new: assignedToId }
-    if (estimatedHours !== undefined && estimatedHours !== task.estimatedHours) changes.estimatedHours = { old: task.estimatedHours, new: estimatedHours }
+    const changes: Record<string, any> = {};
+    if (title !== undefined && title !== task.title)
+      changes.title = { old: task.title, new: title };
+    if (status !== undefined && status !== task.status)
+      changes.status = { old: task.status, new: status };
+    if (assignedToId !== undefined && assignedToId !== task.assignedToId)
+      changes.assignedToId = { old: task.assignedToId, new: assignedToId };
+    if (estimatedHours !== undefined && estimatedHours !== task.estimatedHours)
+      changes.estimatedHours = { old: task.estimatedHours, new: estimatedHours };
 
     await createAuditLog(authContext.userId, 'task_updated', {
       taskId: task.id,
       title: updated.title,
       projectId: task.projectId,
       changes,
-    })
+    });
 
     const assignedTo = updated.assignedToId
       ? await db.query.users.findFirst({
-        where: eq(users.id, updated.assignedToId),
-      })
-      : null
+          where: eq(users.id, updated.assignedToId),
+        })
+      : null;
 
     return NextResponse.json({
       ...updated,
       assignedTo: assignedTo
         ? {
-          id: assignedTo.id,
-          email: assignedTo.email,
-          fullName: assignedTo.fullName,
-        }
+            id: assignedTo.id,
+            email: assignedTo.email,
+            fullName: assignedTo.fullName,
+          }
         : null,
-    })
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
 
@@ -399,51 +396,50 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ taskId: string }> }
+  { params }: { params: Promise<{ taskId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { taskId } = await params
+    const authContext = await requireAuth();
+    const { taskId } = await params;
 
     const task = await db.query.tasks.findFirst({
       where: eq(tasks.id, taskId),
-    })
+    });
 
     if (!task) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const project = await db.query.projects.findFirst({
       where: eq(projects.id, task.projectId),
-    })
+    });
 
     if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const hasAccess = await verifyTenantAccess(authContext.userId, project.tenantId)
+    const hasAccess = await verifyTenantAccess(authContext.userId, project.tenantId);
     if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     await db
       .update(tasks)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
-      .where(eq(tasks.id, taskId))
+      .where(eq(tasks.id, taskId));
 
     // Trigger Audit Log
     await createAuditLog(authContext.userId, 'task_deleted', {
       taskId: task.id,
       title: task.title,
       projectId: task.projectId,
-    })
+    });
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
-

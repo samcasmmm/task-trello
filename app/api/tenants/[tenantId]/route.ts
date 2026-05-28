@@ -1,29 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, verifyTenantAccess, verifyTenantRole } from '@/lib/api-auth'
-import db, { tenants, tenantMembers, users, projects, eq, sql } from '@/lib/drizzle'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, verifyTenantAccess, verifyTenantRole } from '@/lib/api-auth';
+import db, { tenants, tenantMembers, users, projects, eq, sql } from '@/lib/drizzle';
 
 /**
  * GET /api/tenants/[tenantId] - Get tenant details
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ tenantId: string }> }
+  { params }: { params: Promise<{ tenantId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { tenantId } = await params
+    const authContext = await requireAuth();
+    const { tenantId } = await params;
 
-    const hasAccess = await verifyTenantAccess(authContext.userId, tenantId)
+    const hasAccess = await verifyTenantAccess(authContext.userId, tenantId);
     if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const tenant = await db.query.tenants.findFirst({
       where: eq(tenants.id, tenantId),
-    })
+    });
 
     if (!tenant) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const memberRows = await db
@@ -40,7 +40,7 @@ export async function GET(
       .from(tenantMembers)
       .leftJoin(users, eq(tenantMembers.userId, users.id))
       .where(eq(tenantMembers.tenantId, tenantId))
-      .execute()
+      .execute();
 
     const members = memberRows.map((row) => ({
       id: row.id,
@@ -53,13 +53,13 @@ export async function GET(
         fullName: row.fullName,
         avatarUrl: row.avatarUrl,
       },
-    }))
+    }));
 
     const [projectCountRow] = await db
       .select({ count: sql<number>`count(*)` })
       .from(projects)
       .where(eq(projects.tenantId, tenantId))
-      .execute()
+      .execute();
 
     return NextResponse.json({
       ...tenant,
@@ -67,12 +67,12 @@ export async function GET(
       _count: {
         projects: Number(projectCountRow?.count ?? 0),
       },
-    })
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
 
@@ -81,19 +81,19 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ tenantId: string }> }
+  { params }: { params: Promise<{ tenantId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { tenantId } = await params
+    const authContext = await requireAuth();
+    const { tenantId } = await params;
 
-    const isAdmin = await verifyTenantRole(authContext.userId, tenantId, 'admin')
+    const isAdmin = await verifyTenantRole(authContext.userId, tenantId, 'admin');
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await request.json()
-    const { name, description, logoUrl } = body
+    const body = await request.json();
+    const { name, description, logoUrl } = body;
 
     const [updatedTenant] = await db
       .update(tenants)
@@ -104,19 +104,19 @@ export async function PATCH(
         updatedAt: new Date(),
       })
       .where(eq(tenants.id, tenantId))
-      .returning()
+      .returning();
 
     const [memberCountRow] = await db
       .select({ count: sql<number>`count(*)` })
       .from(tenantMembers)
       .where(eq(tenantMembers.tenantId, tenantId))
-      .execute()
+      .execute();
 
     const [projectCountRow] = await db
       .select({ count: sql<number>`count(*)` })
       .from(projects)
       .where(eq(projects.tenantId, tenantId))
-      .execute()
+      .execute();
 
     return NextResponse.json({
       ...updatedTenant,
@@ -124,12 +124,12 @@ export async function PATCH(
         members: Number(memberCountRow?.count ?? 0),
         projects: Number(projectCountRow?.count ?? 0),
       },
-    })
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
 
@@ -138,32 +138,31 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ tenantId: string }> }
+  { params }: { params: Promise<{ tenantId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { tenantId } = await params
+    const authContext = await requireAuth();
+    const { tenantId } = await params;
 
     const tenant = await db.query.tenants.findFirst({
       where: eq(tenants.id, tenantId),
-    })
+    });
 
     if (!tenant) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     if (tenant.ownerId !== authContext.userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    await db.delete(tenants).where(eq(tenants.id, tenantId))
+    await db.delete(tenants).where(eq(tenants.id, tenantId));
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
-

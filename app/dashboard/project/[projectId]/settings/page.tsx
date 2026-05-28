@@ -1,35 +1,35 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { ChevronLeft } from 'lucide-react'
-import Link from 'next/link'
-import CustomFieldsManager from '@/components/custom-fields-manager'
-import api from '@/lib/axios'
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
+import Link from 'next/link';
+import CustomFieldsManager from '@/components/custom-fields-manager';
+import api from '@/lib/axios';
 
 export default function ProjectSettingsPage() {
-  const params = useParams()
-  const router = useRouter()
-  const projectId = params.projectId as string
-  const [project, setProject] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const params = useParams();
+  const router = useRouter();
+  const projectId = params.projectId as string;
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await api.get(`/api/projects/${projectId}`)
-        setProject(response.data)
+        const response = await api.get(`/api/projects/${projectId}`);
+        setProject(response.data);
       } catch (error) {
-        console.error('Error fetching project:', error)
-        router.push('/dashboard')
+        console.error('Error fetching project:', error);
+        router.push('/dashboard');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchProject()
-  }, [projectId, router])
+    fetchProject();
+  }, [projectId, router]);
 
   if (loading) {
     return (
@@ -41,11 +41,11 @@ export default function ProjectSettingsPage() {
           <p className="text-sm text-muted-foreground">Loading project...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!project) {
-    return null
+    return null;
   }
 
   return (
@@ -66,5 +66,5 @@ export default function ProjectSettingsPage() {
       {/* Custom fields manager */}
       <CustomFieldsManager projectId={projectId} customFields={project.custom_fields || []} />
     </div>
-  )
+  );
 }

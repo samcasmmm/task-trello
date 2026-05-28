@@ -39,7 +39,7 @@ export default function ProjectKpiCards({ stats }: ProjectKpiCardsProps) {
         return (
           <div
             key={key}
-            className="relative overflow-hidden rounded-lg bg-[var(--surface-2)] border border-[var(--border-subtle)]"
+            className="relative overflow-hidden rounded-lg bg-surface-2 border border-border-subtle"
           >
             {/* Left accent indicator edge bar */}
             <div
@@ -49,14 +49,14 @@ export default function ProjectKpiCards({ stats }: ProjectKpiCardsProps) {
               <div className="flex items-center justify-between mb-2.5">
                 <p className="field-label">{label}</p>
                 <Icon
-                  className={`w-3.5 h-3.5 flex-shrink-0 ${
-                    isDanger ? 'text-[#e05555]' : 'text-[var(--foreground-dim)]'
+                  className={`w-3.5 h-3.5 shrink-0 ${
+                    isDanger ? 'text-[#e05555]' : 'text-foreground-dim'
                   }`}
                 />
               </div>
               <p
                 className={`text-2xl font-black tracking-tight ${
-                  isDanger ? 'text-[#f87171]' : 'text-[var(--foreground)]'
+                  isDanger ? 'text-[#f87171]' : 'text-foreground'
                 }`}
               >
                 {val}

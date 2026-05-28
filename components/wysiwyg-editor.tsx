@@ -2,16 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  Strikethrough, 
-  List, 
-  ListOrdered, 
+import {
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  List,
+  ListOrdered,
   Heading3,
   Heading4,
-  RemoveFormatting
+  RemoveFormatting,
 } from 'lucide-react';
 
 interface WysiwygEditorProps {
@@ -25,7 +25,7 @@ export default function WysiwygEditor({
   value,
   onChange,
   placeholder = 'Write something here...',
-  minHeight = '140px'
+  minHeight = '140px',
 }: WysiwygEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -55,107 +55,107 @@ export default function WysiwygEditor({
   };
 
   return (
-    <div className='border border-slate-800 rounded bg-slate-950 text-slate-100 overflow-hidden flex flex-col focus-within:border-slate-700 transition-colors'>
+    <div className="border border-slate-800 rounded bg-slate-950 text-slate-100 overflow-hidden flex flex-col focus-within:border-slate-700 transition-colors">
       {/* Editor Toolbar */}
-      <div className='flex flex-wrap items-center gap-1 p-1 bg-slate-900 border-b border-slate-800 select-none'>
+      <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-900 border-b border-slate-800 select-none">
         <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white'
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
           onClick={() => executeCommand('bold')}
-          title='Bold'
+          title="Bold"
         >
-          <Bold className='h-3.5 w-3.5' />
+          <Bold className="h-3.5 w-3.5" />
         </Button>
         <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white'
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
           onClick={() => executeCommand('italic')}
-          title='Italic'
+          title="Italic"
         >
-          <Italic className='h-3.5 w-3.5' />
+          <Italic className="h-3.5 w-3.5" />
         </Button>
         <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white'
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
           onClick={() => executeCommand('underline')}
-          title='Underline'
+          title="Underline"
         >
-          <Underline className='h-3.5 w-3.5' />
+          <Underline className="h-3.5 w-3.5" />
         </Button>
         <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white'
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
           onClick={() => executeCommand('strikeThrough')}
-          title='Strikethrough'
+          title="Strikethrough"
         >
-          <Strikethrough className='h-3.5 w-3.5' />
+          <Strikethrough className="h-3.5 w-3.5" />
         </Button>
-        
-        <div className='w-[1px] h-4 bg-slate-800 mx-1' />
+
+        <div className="w-[1px] h-4 bg-slate-800 mx-1" />
 
         <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white'
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
           onClick={() => executeCommand('formatBlock', '<h3>')}
-          title='Heading 3'
+          title="Heading 3"
         >
-          <Heading3 className='h-3.5 w-3.5' />
+          <Heading3 className="h-3.5 w-3.5" />
         </Button>
         <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white'
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
           onClick={() => executeCommand('formatBlock', '<h4>')}
-          title='Heading 4'
+          title="Heading 4"
         >
-          <Heading4 className='h-3.5 w-3.5' />
+          <Heading4 className="h-3.5 w-3.5" />
         </Button>
 
-        <div className='w-[1px] h-4 bg-slate-800 mx-1' />
+        <div className="w-[1px] h-4 bg-slate-800 mx-1" />
 
         <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white'
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
           onClick={() => executeCommand('insertUnorderedList')}
-          title='Bullet List'
+          title="Bullet List"
         >
-          <List className='h-3.5 w-3.5' />
+          <List className="h-3.5 w-3.5" />
         </Button>
         <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white'
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
           onClick={() => executeCommand('insertOrderedList')}
-          title='Numbered List'
+          title="Numbered List"
         >
-          <ListOrdered className='h-3.5 w-3.5' />
+          <ListOrdered className="h-3.5 w-3.5" />
         </Button>
 
-        <div className='w-[1px] h-4 bg-slate-800 mx-1' />
+        <div className="w-[1px] h-4 bg-slate-800 mx-1" />
 
         <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white'
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
           onClick={() => executeCommand('removeFormat')}
-          title='Clear Formatting'
+          title="Clear Formatting"
         >
-          <RemoveFormatting className='h-3.5 w-3.5' />
+          <RemoveFormatting className="h-3.5 w-3.5" />
         </Button>
       </div>
 
@@ -164,7 +164,7 @@ export default function WysiwygEditor({
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        className='p-3 outline-none overflow-y-auto text-sm prose prose-invert max-w-none text-slate-200'
+        className="p-3 outline-none overflow-y-auto text-sm prose prose-invert max-w-none text-slate-200"
         style={{ minHeight }}
         placeholder={placeholder}
       />

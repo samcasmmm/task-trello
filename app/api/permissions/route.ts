@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/api-auth'
-import db, { permissions } from '@/lib/drizzle'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/api-auth';
+import db, { permissions } from '@/lib/drizzle';
 
 /**
  * GET /api/permissions - Get all system-level permissions
@@ -8,13 +8,13 @@ import db, { permissions } from '@/lib/drizzle'
 export async function GET(request: NextRequest) {
   try {
     // Only authenticated users can list permissions
-    await requireAuth()
-    const allPermissions = await db.select().from(permissions).execute()
-    return NextResponse.json(allPermissions)
+    await requireAuth();
+    const allPermissions = await db.select().from(permissions).execute();
+    return NextResponse.json(allPermissions);
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }

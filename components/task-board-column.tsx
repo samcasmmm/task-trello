@@ -74,22 +74,16 @@ export function TaskBoardColumn({
 
   return (
     <div
-      className='flex-shrink-0 w-[300px] flex flex-col gap-2'
+      className="shrink-0 w-[300px] flex flex-col gap-2"
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
       {/* Column header */}
-      <div className='flex items-center gap-2 px-0.5 py-1.5'>
-        <div
-          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.barClass}`}
-        />
-        <span className='text-xs font-bold text-foreground'>
-          {cfg.label}
-        </span>
-        <span
-          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cfg.countClass}`}
-        >
+      <div className="flex items-center gap-2 px-0.5 py-1.5">
+        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.barClass}`} />
+        <span className="text-xs font-bold text-foreground">{cfg.label}</span>
+        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cfg.countClass}`}>
           {tasks.length}
         </span>
       </div>
@@ -97,9 +91,7 @@ export function TaskBoardColumn({
       {/* Drop zone */}
       <div
         className={`flex flex-col gap-2 min-h-[480px] rounded-lg p-2 transition-all duration-200 border ${
-          isDragTarget
-            ? `${cfg.dropActive}`
-            : 'border-border-subtle bg-surface-2'
+          isDragTarget ? `${cfg.dropActive}` : 'border-border-subtle bg-surface-2'
         }`}
       >
         {tasks.map((task) => (
@@ -114,8 +106,8 @@ export function TaskBoardColumn({
 
         {/* Add task button */}
         <CreateTaskDialog projectId={projectId} onSuccess={onTaskCreated}>
-          <button className='w-full flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-medium transition-all mt-auto border border-dashed border-border-subtle text-foreground-dim hover:border-border-strong hover:text-foreground-muted'>
-            <Plus className='w-3 h-3' />
+          <button className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-medium transition-all mt-auto border border-dashed border-border-subtle text-foreground-dim hover:border-border-strong hover:text-foreground-muted">
+            <Plus className="w-3 h-3" />
             Add task
           </button>
         </CreateTaskDialog>

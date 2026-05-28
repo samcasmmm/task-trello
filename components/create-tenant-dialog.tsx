@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,48 +9,46 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { toast } from 'sonner'
-import api from '@/lib/axios'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import api from '@/lib/axios';
 
 interface CreateTenantDialogProps {
-  children: React.ReactNode
-  onSuccess?: (tenant: any) => void
+  children: React.ReactNode;
+  onSuccess?: (tenant: any) => void;
 }
 
-export default function CreateTenantDialog({
-  children,
-  onSuccess,
-}: CreateTenantDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+export default function CreateTenantDialog({ children, onSuccess }: CreateTenantDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
     description: '',
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
-      const response = await api.post('/api/tenants', formData)
+      const response = await api.post('/api/tenants', formData);
 
-      const tenant = response.data
-      toast.success('Workspace created successfully!')
-      setOpen(false)
-      setFormData({ name: '', slug: '', description: '' })
-      onSuccess?.(tenant)
+      const tenant = response.data;
+      toast.success('Workspace created successfully!');
+      setOpen(false);
+      setFormData({ name: '', slug: '', description: '' });
+      onSuccess?.(tenant);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create workspace'
-      toast.error(errorMessage)
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Failed to create workspace';
+      toast.error(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -65,9 +63,7 @@ export default function CreateTenantDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Workspace Name
-            </label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Workspace Name</label>
             <Input
               required
               placeholder="e.g., My Company"
@@ -77,9 +73,7 @@ export default function CreateTenantDialog({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Slug
-            </label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Slug</label>
             <Input
               required
               placeholder="e.g., my-company"
@@ -91,9 +85,7 @@ export default function CreateTenantDialog({
                 })
               }
             />
-            <p className="text-xs text-gray-500 mt-1">
-              URL-friendly identifier for your workspace
-            </p>
+            <p className="text-xs text-gray-500 mt-1">URL-friendly identifier for your workspace</p>
           </div>
 
           <div>
@@ -109,11 +101,7 @@ export default function CreateTenantDialog({
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
@@ -123,5 +111,5 @@ export default function CreateTenantDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,30 +1,30 @@
-'use client'
+'use client';
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import api from '@/lib/axios'
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/axios';
 
 export default function Page() {
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await api.get('/api/auth/me')
-        const data = response.data
+        const response = await api.get('/api/auth/me');
+        const data = response.data;
 
         if (data.user) {
-          router.push('/dashboard')
+          router.push('/dashboard');
         } else {
-          router.push('/login')
+          router.push('/login');
         }
       } catch {
-        router.push('/login')
+        router.push('/login');
       }
-    }
+    };
 
-    checkAuth()
-  }, [router])
+    checkAuth();
+  }, [router]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background">
@@ -35,5 +35,5 @@ export default function Page() {
         <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
       </div>
     </main>
-  )
+  );
 }

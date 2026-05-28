@@ -5,16 +5,12 @@ export const metadata = {
   description: 'Manage your projects and tasks',
 };
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className='flex h-screen overflow-hidden bg-background'>
+    <div className="flex h-screen overflow-hidden bg-background">
       <DashboardNav />
-      <main className='flex-1 overflow-auto pt-12 md:pt-0'>
-        <div className='max-w-full h-full px-6 py-6'>{children}</div>
+      <main className="flex-1 overflow-auto pt-12 md:pt-0">
+        <div className="max-w-full h-full px-6 py-6">{children}</div>
       </main>
     </div>
   );

@@ -1,25 +1,48 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Trash2, UserPlus, ShieldAlert, FolderKanban, History, Search, RefreshCw, Key } from 'lucide-react'
-import { toast } from 'sonner'
-import api from '@/lib/axios'
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Trash2,
+  UserPlus,
+  ShieldAlert,
+  FolderKanban,
+  History,
+  Search,
+  RefreshCw,
+  Key,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import api from '@/lib/axios';
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState('users')
-  const [users, setUsers] = useState<any[]>([])
-  const [tenants, setTenants] = useState<any[]>([])
-  const [logs, setLogs] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState('users');
+  const [users, setUsers] = useState<any[]>([]);
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Form states for creating a new user
   const [newUser, setNewUser] = useState({
@@ -27,104 +50,114 @@ export default function AdminPage() {
     email: '',
     password: '',
     roleId: 'r-member',
-  })
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  });
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Roles lookup
   const systemRoles = [
     { id: 'r-super-admin', name: 'Super Admin' },
     { id: 'r-tenant-manager', name: 'Tenant Manager' },
     { id: 'r-member', name: 'Member' },
-  ]
+  ];
 
   const fetchData = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const [usersRes, tenantsRes, logsRes] = await Promise.all([
         api.get('/api/admin/users'),
         api.get('/api/admin/tenants'),
         api.get('/api/admin/logs'),
-      ])
+      ]);
 
-      setUsers(usersRes.data)
-      setTenants(tenantsRes.data)
-      setLogs(logsRes.data)
+      setUsers(usersRes.data);
+      setTenants(tenantsRes.data);
+      setLogs(logsRes.data);
     } catch (error) {
-      console.error('Error fetching admin data:', error)
-      toast.error('Connection error while fetching admin data')
+      console.error('Error fetching admin data:', error);
+      toast.error('Connection error while fetching admin data');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!newUser.fullName || !newUser.email || !newUser.password) {
-      toast.error('All fields are required')
-      return
+      toast.error('All fields are required');
+      return;
     }
 
     try {
-      await api.post('/api/admin/users', newUser)
+      await api.post('/api/admin/users', newUser);
 
-      toast.success('User created successfully')
-      setIsCreateOpen(false)
-      setNewUser({ fullName: '', email: '', password: '', roleId: 'r-member' })
-      fetchData()
+      toast.success('User created successfully');
+      setIsCreateOpen(false);
+      setNewUser({ fullName: '', email: '', password: '', roleId: 'r-member' });
+      fetchData();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create user'
-      toast.error(errorMessage)
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create user';
+      toast.error(errorMessage);
     }
-  }
+  };
 
   const handleRoleChange = async (userId: string, newRoleId: string) => {
     try {
-      await api.patch(`/api/admin/users/${userId}`, { roleId: newRoleId })
+      await api.patch(`/api/admin/users/${userId}`, { roleId: newRoleId });
 
-      toast.success('User role updated successfully')
-      fetchData()
+      toast.success('User role updated successfully');
+      fetchData();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to update user role'
-      toast.error(errorMessage)
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Failed to update user role';
+      toast.error(errorMessage);
     }
-  }
+  };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you absolutely sure you want to delete this user? This will erase their login and roles.')) {
-      return
+    if (
+      !confirm(
+        'Are you absolutely sure you want to delete this user? This will erase their login and roles.',
+      )
+    ) {
+      return;
     }
 
     try {
-      await api.delete(`/api/admin/users/${userId}`)
+      await api.delete(`/api/admin/users/${userId}`);
 
-      toast.success('User deleted successfully')
-      fetchData()
+      toast.success('User deleted successfully');
+      fetchData();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete user'
-      toast.error(errorMessage)
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete user';
+      toast.error(errorMessage);
     }
-  }
+  };
 
   // Filter handlers
-  const filteredUsers = users.filter(u => 
-    u.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredUsers = users.filter(
+    (u) =>
+      u.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
-  const filteredTenants = tenants.filter(t => 
-    t.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.slug?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredTenants = tenants.filter(
+    (t) =>
+      t.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.slug?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
-  const filteredLogs = logs.filter(l => 
-    l.action?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.userEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    JSON.stringify(l.metadata || {}).toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredLogs = logs.filter(
+    (l) =>
+      l.action?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      l.userEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      JSON.stringify(l.metadata || {})
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <div className="space-y-6">
@@ -136,7 +169,8 @@ export default function AdminPage() {
             Platform Admin Console
           </h1>
           <p className="text-gray-600 mt-1">
-            Global controls for multi-tenant accounts, RBAC memberships, and real-time operations audit logs
+            Global controls for multi-tenant accounts, RBAC memberships, and real-time operations
+            audit logs
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -216,7 +250,15 @@ export default function AdminPage() {
       </div>
 
       {/* Main Tabs Layout */}
-      <Tabs defaultValue="users" value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchQuery(''); }} className="w-full">
+      <Tabs
+        defaultValue="users"
+        value={activeTab}
+        onValueChange={(val) => {
+          setActiveTab(val);
+          setSearchQuery('');
+        }}
+        className="w-full"
+      >
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
           <TabsList className="bg-gray-100 p-1">
             <TabsTrigger value="users" className="gap-2">
@@ -232,7 +274,7 @@ export default function AdminPage() {
               Audit Logs ({logs.length})
             </TabsTrigger>
           </TabsList>
-          
+
           <div className="relative w-full sm:w-80">
             <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
             <Input
@@ -250,7 +292,8 @@ export default function AdminPage() {
             <CardHeader className="pb-3 border-b">
               <CardTitle>User Directory</CardTitle>
               <CardDescription>
-                Assign system-level permissions and roles. Demoting, upgrading, and deleting user accounts takes effect instantly.
+                Assign system-level permissions and roles. Demoting, upgrading, and deleting user
+                accounts takes effect instantly.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -269,14 +312,16 @@ export default function AdminPage() {
                     </thead>
                     <tbody className="divide-y">
                       {filteredUsers.map((u) => {
-                        const userRole = u.roles[0]?.id || 'r-member'
+                        const userRole = u.roles[0]?.id || 'r-member';
                         return (
                           <tr key={u.id} className="hover:bg-gray-50/50">
                             <td className="py-4">
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-9 w-9">
                                   <AvatarImage src={u.avatarUrl || ''} />
-                                  <AvatarFallback>{u.fullName?.substring(0,2).toUpperCase()}</AvatarFallback>
+                                  <AvatarFallback>
+                                    {u.fullName?.substring(0, 2).toUpperCase()}
+                                  </AvatarFallback>
                                 </Avatar>
                                 <span className="font-semibold text-gray-900">{u.fullName}</span>
                               </div>
@@ -310,13 +355,15 @@ export default function AdminPage() {
                               </Button>
                             </td>
                           </tr>
-                        )
+                        );
                       })}
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">No platform users found matching your search.</div>
+                <div className="text-center py-12 text-gray-500">
+                  No platform users found matching your search.
+                </div>
               )}
             </CardContent>
           </Card>
@@ -328,7 +375,8 @@ export default function AdminPage() {
             <CardHeader className="pb-3 border-b">
               <CardTitle>Platform Workspaces</CardTitle>
               <CardDescription>
-                Overview of tenant organizations hosted on this engine, including member counts and project pipelines.
+                Overview of tenant organizations hosted on this engine, including member counts and
+                project pipelines.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -337,23 +385,32 @@ export default function AdminPage() {
               ) : filteredTenants.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {filteredTenants.map((t) => (
-                    <Card key={t.id} className="hover:shadow-md transition-shadow relative overflow-hidden">
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-amber-500" />
+                    <Card
+                      key={t.id}
+                      className="hover:shadow-md transition-shadow relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-red-500 to-amber-500" />
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-bold flex items-center justify-between">
                           {t.name}
                           <Badge variant="outline">{t.slug}</Badge>
                         </CardTitle>
-                        <CardDescription className="line-clamp-2 mt-1">{t.description || 'No workspace description.'}</CardDescription>
+                        <CardDescription className="line-clamp-2 mt-1">
+                          {t.description || 'No workspace description.'}
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-2 text-sm text-gray-600 space-y-2">
                         <div className="flex justify-between border-b pb-1">
                           <span>Team size</span>
-                          <span className="font-semibold text-gray-900">{t.memberCount} members</span>
+                          <span className="font-semibold text-gray-900">
+                            {t.memberCount} members
+                          </span>
                         </div>
                         <div className="flex justify-between border-b pb-1">
                           <span>Active Projects</span>
-                          <span className="font-semibold text-gray-900">{t.projectCount} projects</span>
+                          <span className="font-semibold text-gray-900">
+                            {t.projectCount} projects
+                          </span>
                         </div>
                         <div className="flex justify-between pt-1">
                           <span>Tenant ID</span>
@@ -364,7 +421,9 @@ export default function AdminPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">No workspaces found matching search.</div>
+                <div className="text-center py-12 text-gray-500">
+                  No workspaces found matching search.
+                </div>
               )}
             </CardContent>
           </Card>
@@ -376,7 +435,8 @@ export default function AdminPage() {
             <CardHeader className="pb-3 border-b">
               <CardTitle>System Operations Audit History</CardTitle>
               <CardDescription>
-                Full security and action trail of project updates, task states, RBAC role updates, and platform creation logs.
+                Full security and action trail of project updates, task states, RBAC role updates,
+                and platform creation logs.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -403,7 +463,9 @@ export default function AdminPage() {
                           </td>
                           <td className="py-3 text-gray-700">
                             <div>
-                              <div className="font-medium text-gray-900">{l.userFullName || 'System'}</div>
+                              <div className="font-medium text-gray-900">
+                                {l.userFullName || 'System'}
+                              </div>
                               <div className="text-xs text-gray-500">{l.userEmail}</div>
                             </div>
                           </td>
@@ -421,12 +483,14 @@ export default function AdminPage() {
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">No system audit logs found matching search.</div>
+                <div className="text-center py-12 text-gray-500">
+                  No system audit logs found matching search.
+                </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

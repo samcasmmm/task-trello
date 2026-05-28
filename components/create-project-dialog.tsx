@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,11 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { toast } from 'sonner'
-import api from '@/lib/axios'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import api from '@/lib/axios';
 
 const COLORS = [
   '#3B82F6', // blue
@@ -24,12 +24,12 @@ const COLORS = [
   '#EC4899', // pink
   '#06B6D4', // cyan
   '#F97316', // orange
-]
+];
 
 interface CreateProjectDialogProps {
-  tenantId: string
-  children: React.ReactNode
-  onSuccess?: (project: any) => void
+  tenantId: string;
+  children: React.ReactNode;
+  onSuccess?: (project: any) => void;
 }
 
 export default function CreateProjectDialog({
@@ -37,17 +37,17 @@ export default function CreateProjectDialog({
   children,
   onSuccess,
 }: CreateProjectDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     color: COLORS[0],
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       const response = await api.post('/api/projects', {
@@ -55,20 +55,21 @@ export default function CreateProjectDialog({
         name: formData.name,
         description: formData.description,
         color: formData.color,
-      })
+      });
 
-      const project = response.data
-      toast.success('Project created successfully!')
-      setOpen(false)
-      setFormData({ name: '', description: '', color: COLORS[0] })
-      onSuccess?.(project)
+      const project = response.data;
+      toast.success('Project created successfully!');
+      setOpen(false);
+      setFormData({ name: '', description: '', color: COLORS[0] });
+      onSuccess?.(project);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create project'
-      toast.error(errorMessage)
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Failed to create project';
+      toast.error(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -76,16 +77,12 @@ export default function CreateProjectDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
-          <DialogDescription>
-            Add a new project to organize your tasks
-          </DialogDescription>
+          <DialogDescription>Add a new project to organize your tasks</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Project Name
-            </label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Project Name</label>
             <Input
               required
               placeholder="e.g., Website Redesign"
@@ -107,9 +104,7 @@ export default function CreateProjectDialog({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Color
-            </label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Color</label>
             <div className="flex gap-2 flex-wrap">
               {COLORS.map((color) => (
                 <button
@@ -117,9 +112,7 @@ export default function CreateProjectDialog({
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
                   className={`w-8 h-8 rounded border-2 transition-all ${
-                    formData.color === color
-                      ? 'border-gray-900 scale-110'
-                      : 'border-transparent'
+                    formData.color === color ? 'border-gray-900 scale-110' : 'border-transparent'
                   }`}
                   style={{ backgroundColor: color }}
                 />
@@ -128,11 +121,7 @@ export default function CreateProjectDialog({
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
@@ -142,5 +131,5 @@ export default function CreateProjectDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

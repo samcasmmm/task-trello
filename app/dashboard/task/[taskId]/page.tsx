@@ -33,7 +33,7 @@ export default function TaskPage() {
       <div className="flex items-center justify-center h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin" />
-          <p className="text-[11px] text-[var(--foreground-dim)]">Loading task...</p>
+          <p className="text-[11px] text-foreground-dim">Loading task...</p>
         </div>
       </div>
     );
@@ -42,7 +42,7 @@ export default function TaskPage() {
   if (!task) {
     return (
       <div className="text-center py-20">
-        <p className="text-sm font-semibold text-[var(--foreground-muted)]">Task not found</p>
+        <p className="text-sm font-semibold text-foreground-muted">Task not found</p>
       </div>
     );
   }
@@ -53,7 +53,7 @@ export default function TaskPage() {
         <Button
           variant="ghost"
           size="sm"
-          className="flex items-center gap-1.5 px-0 text-xs font-medium transition-colors bg-transparent text-[var(--foreground-dim)] hover:text-[var(--foreground)]"
+          className="flex items-center gap-1.5 px-0 text-xs font-medium transition-colors bg-transparent text-foreground-dim hover:text-foreground"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
           Back to Project

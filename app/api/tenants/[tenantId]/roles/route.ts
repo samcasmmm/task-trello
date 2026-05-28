@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, verifyTenantRole } from '@/lib/api-auth'
-import db, { roles, rolePermissions, permissions, eq, or, isNull } from '@/lib/drizzle'
-import { createAuditLog } from '@/lib/audit'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, verifyTenantRole } from '@/lib/api-auth';
+import db, { roles, rolePermissions, permissions, eq, or, isNull } from '@/lib/drizzle';
+import { createAuditLog } from '@/lib/audit';
 
 /**
  * GET /api/tenants/[tenantId]/roles - Get system roles and custom workspace roles
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ tenantId: string }> }
+  { params }: { params: Promise<{ tenantId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { tenantId } = await params
+    const authContext = await requireAuth();
+    const { tenantId } = await params;
 
     const workspaceRoles = await db
       .select({
@@ -23,17 +23,12 @@ export async function GET(
         createdAt: roles.createdAt,
       })
       .from(roles)
-      .where(
-        or(
-          isNull(roles.tenantId),
-          eq(roles.tenantId, tenantId)
-        )
-      )
-      .execute()
+      .where(or(isNull(roles.tenantId), eq(roles.tenantId, tenantId)))
+      .execute();
 
     // Fetch role permissions for custom roles
-    const roleIds = workspaceRoles.map((r) => r.id)
-    
+    const roleIds = workspaceRoles.map((r) => r.id);
+
     // We will retrieve permissions for all these roles
     const allRolePerms = await db
       .select({
@@ -43,25 +38,25 @@ export async function GET(
       })
       .from(rolePermissions)
       .leftJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
-      .execute()
+      .execute();
 
     const rolesWithPermissions = workspaceRoles.map((role) => {
       const perms = allRolePerms
         .filter((rp) => rp.roleId === role.id && rp.permissionName)
-        .map((rp) => rp.permissionName as string)
+        .map((rp) => rp.permissionName as string);
 
       return {
         ...role,
         permissions: perms,
-      }
-    })
+      };
+    });
 
-    return NextResponse.json(rolesWithPermissions)
+    return NextResponse.json(rolesWithPermissions);
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
 
@@ -70,25 +65,25 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ tenantId: string }> }
+  { params }: { params: Promise<{ tenantId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { tenantId } = await params
+    const authContext = await requireAuth();
+    const { tenantId } = await params;
 
-    const isAdmin = await verifyTenantRole(authContext.userId, tenantId, 'admin')
+    const isAdmin = await verifyTenantRole(authContext.userId, tenantId, 'admin');
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await request.json()
-    const { name, description, permissionIds } = body
+    const body = await request.json();
+    const { name, description, permissionIds } = body;
 
     if (!name) {
-      return NextResponse.json({ error: 'Role name is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Role name is required' }, { status: 400 });
     }
 
-    const newRoleId = `role-${crypto.randomUUID()}`
+    const newRoleId = `role-${crypto.randomUUID()}`;
 
     const [newRole] = await db
       .insert(roles)
@@ -100,7 +95,7 @@ export async function POST(
         createdAt: new Date(),
         updatedAt: new Date(),
       })
-      .returning()
+      .returning();
 
     // Map permissions
     if (permissionIds && Array.isArray(permissionIds) && permissionIds.length > 0) {
@@ -109,10 +104,10 @@ export async function POST(
         roleId: newRoleId,
         permissionId: pId,
         createdAt: new Date(),
-      }))
+      }));
 
       for (const row of inserts) {
-        await db.insert(rolePermissions).values(row).execute()
+        await db.insert(rolePermissions).values(row).execute();
       }
     }
 
@@ -122,14 +117,14 @@ export async function POST(
       roleId: newRoleId,
       name,
       permissionCount: permissionIds?.length || 0,
-    })
+    });
 
-    return NextResponse.json(newRole, { status: 201 })
+    return NextResponse.json(newRole, { status: 201 });
   } catch (error: any) {
-    console.error('Failed to create role:', error)
+    console.error('Failed to create role:', error);
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }

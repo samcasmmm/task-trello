@@ -1,20 +1,20 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Plus, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
-import api from '@/lib/axios'
+} from '@/components/ui/select';
+import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import api from '@/lib/axios';
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
@@ -23,59 +23,60 @@ const FIELD_TYPES = [
   { value: 'multiselect', label: 'Multi-Select' },
   { value: 'date', label: 'Date' },
   { value: 'checkbox', label: 'Checkbox' },
-]
+];
 
 interface CustomField {
-  id?: string
-  name: string
-  field_type: string
-  options?: any
+  id?: string;
+  name: string;
+  field_type: string;
+  options?: any;
 }
 
 export default function CustomFieldsManager({
   projectId,
   customFields = [],
 }: {
-  projectId: string
-  customFields?: CustomField[]
+  projectId: string;
+  customFields?: CustomField[];
 }) {
-  const [fields, setFields] = useState<CustomField[]>(customFields)
-  const [loading, setLoading] = useState(false)
+  const [fields, setFields] = useState<CustomField[]>(customFields);
+  const [loading, setLoading] = useState(false);
   const [newField, setNewField] = useState<CustomField>({
     name: '',
     field_type: 'text',
     options: null,
-  })
-  const [showForm, setShowForm] = useState(false)
+  });
+  const [showForm, setShowForm] = useState(false);
 
   const handleAddField = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!newField.name.trim()) {
-      toast.error('Field name is required')
-      return
+      toast.error('Field name is required');
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await api.post(`/api/projects/${projectId}/custom-fields`, {
         name: newField.name,
         fieldType: newField.field_type,
         options: newField.options,
-      })
-      const result = response.data
+      });
+      const result = response.data;
 
-      setFields([...fields, result])
-      setNewField({ name: '', field_type: 'text', options: null })
-      setShowForm(false)
-      toast.success('Custom field created!')
+      setFields([...fields, result]);
+      setNewField({ name: '', field_type: 'text', options: null });
+      setShowForm(false);
+      toast.success('Custom field created!');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create custom field'
-      toast.error(errorMessage)
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Failed to create custom field';
+      toast.error(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -139,27 +140,19 @@ export default function CustomFieldsManager({
           <CardContent>
             <form onSubmit={handleAddField} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Field Name
-                </label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Field Name</label>
                 <Input
                   placeholder="e.g., Department, Budget, Client"
                   value={newField.name}
-                  onChange={(e) =>
-                    setNewField({ ...newField, name: e.target.value })
-                  }
+                  onChange={(e) => setNewField({ ...newField, name: e.target.value })}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Field Type
-                </label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Field Type</label>
                 <Select
                   value={newField.field_type}
-                  onValueChange={(value) =>
-                    setNewField({ ...newField, field_type: value })
-                  }
+                  onValueChange={(value) => setNewField({ ...newField, field_type: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -174,8 +167,7 @@ export default function CustomFieldsManager({
                 </Select>
               </div>
 
-              {(newField.field_type === 'select' ||
-                newField.field_type === 'multiselect') && (
+              {(newField.field_type === 'select' || newField.field_type === 'multiselect') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-1">
                     Options (comma-separated)
@@ -203,8 +195,8 @@ export default function CustomFieldsManager({
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setShowForm(false)
-                    setNewField({ name: '', field_type: 'text', options: null })
+                    setShowForm(false);
+                    setNewField({ name: '', field_type: 'text', options: null });
                   }}
                 >
                   Cancel
@@ -220,5 +212,5 @@ export default function CustomFieldsManager({
         </Button>
       )}
     </div>
-  )
+  );
 }

@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, verifyTenantRole } from '@/lib/api-auth'
-import db, { tenantMembers, users, eq, and, sql, userRoles, tenants } from '@/lib/drizzle'
-import { createAuditLog } from '@/lib/audit'
-import { createNotification } from '@/lib/notification'
-import bcrypt from 'bcryptjs'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, verifyTenantRole } from '@/lib/api-auth';
+import db, { tenantMembers, users, eq, and, sql, userRoles, tenants } from '@/lib/drizzle';
+import { createAuditLog } from '@/lib/audit';
+import { createNotification } from '@/lib/notification';
+import bcrypt from 'bcryptjs';
 
 /**
  * GET /api/tenants/[tenantId]/members - List team members
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ tenantId: string }> }
+  { params }: { params: Promise<{ tenantId: string }> },
 ) {
   try {
-    const { tenantId } = await params
+    const { tenantId } = await params;
 
     const rows = await db
       .select({
@@ -30,7 +30,7 @@ export async function GET(
       .from(tenantMembers)
       .leftJoin(users, eq(tenantMembers.userId, users.id))
       .where(eq(tenantMembers.tenantId, tenantId))
-      .execute()
+      .execute();
 
     const members = rows.map((row) => ({
       id: row.id,
@@ -44,14 +44,14 @@ export async function GET(
         fullName: row.fullName,
         avatarUrl: row.avatarUrl,
       },
-    }))
+    }));
 
-    return NextResponse.json(members)
+    return NextResponse.json(members);
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
 
@@ -60,45 +60,42 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ tenantId: string }> }
+  { params }: { params: Promise<{ tenantId: string }> },
 ) {
   try {
-    const authContext = await requireAuth()
-    const { tenantId } = await params
+    const authContext = await requireAuth();
+    const { tenantId } = await params;
 
-    const isAdmin = await verifyTenantRole(authContext.userId, tenantId, 'admin')
+    const isAdmin = await verifyTenantRole(authContext.userId, tenantId, 'admin');
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const tenant = await db.query.tenants.findFirst({
-      where: eq(tenants.id, tenantId)
-    })
+      where: eq(tenants.id, tenantId),
+    });
     if (!tenant) {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
     }
 
-    const body = await request.json()
-    const { email, role, reportsToId, fullName, password } = body
+    const body = await request.json();
+    const { email, role, reportsToId, fullName, password } = body;
 
     if (!email || !role) {
-      return NextResponse.json(
-        { error: 'Email and role are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email and role are required' }, { status: 400 });
     }
 
     let targetUser = await db.query.users.findFirst({
       where: eq(users.email, email),
-    })
+    });
 
-    let isAutoCreated = false
+    let isAutoCreated = false;
     if (!targetUser) {
       // Auto-create user since they don't exist yet!
-      const defaultPassword = password || 'Welcome123!'
-      const passwordHash = await bcrypt.hash(defaultPassword, 10)
-      const newUserId = crypto.randomUUID()
-      
+      const defaultPassword = password || 'Welcome123!';
+      const passwordHash = await bcrypt.hash(defaultPassword, 10);
+      const newUserId = crypto.randomUUID();
+
       const [newUser] = await db
         .insert(users)
         .values({
@@ -110,32 +107,29 @@ export async function POST(
           createdAt: new Date(),
           updatedAt: new Date(),
         })
-        .returning()
+        .returning();
 
       // Assign system role 'r-member' for them
-      await db.insert(userRoles).values({
-        id: crypto.randomUUID(),
-        userId: newUserId,
-        roleId: 'r-member',
-        tenantId,
-      }).execute()
+      await db
+        .insert(userRoles)
+        .values({
+          id: crypto.randomUUID(),
+          userId: newUserId,
+          roleId: 'r-member',
+          tenantId,
+        })
+        .execute();
 
-      targetUser = newUser
-      isAutoCreated = true
+      targetUser = newUser;
+      isAutoCreated = true;
     }
 
     const existingMember = await db.query.tenantMembers.findFirst({
-      where: and(
-        eq(tenantMembers.tenantId, tenantId),
-        eq(tenantMembers.userId, targetUser.id)
-      ),
-    })
+      where: and(eq(tenantMembers.tenantId, tenantId), eq(tenantMembers.userId, targetUser.id)),
+    });
 
     if (existingMember) {
-      return NextResponse.json(
-        { error: 'User is already a member' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'User is already a member' }, { status: 400 });
     }
 
     const [member] = await db
@@ -149,13 +143,13 @@ export async function POST(
         joinedAt: new Date(),
         updatedAt: new Date(),
       })
-      .returning()
+      .returning();
 
     // Trigger Notification for the invited member
     await createNotification(
       targetUser.id,
-      `You have been added to the workspace: "${tenant.name}" as a ${role}.`
-    )
+      `You have been added to the workspace: "${tenant.name}" as a ${role}.`,
+    );
 
     // Trigger Audit Log
     await createAuditLog(authContext.userId, 'member_invited', {
@@ -165,7 +159,7 @@ export async function POST(
       email: targetUser.email,
       role,
       isAutoCreated,
-    })
+    });
 
     return NextResponse.json(
       {
@@ -178,14 +172,13 @@ export async function POST(
           avatarUrl: targetUser.avatarUrl,
         },
       },
-      { status: 201 }
-    )
+      { status: 201 },
+    );
   } catch (error: any) {
-    console.error('Member invite error:', error)
+    console.error('Member invite error:', error);
     return NextResponse.json(
       { error: error.message },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
-    )
+      { status: error.message === 'Unauthorized' ? 401 : 500 },
+    );
   }
 }
-

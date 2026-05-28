@@ -142,7 +142,7 @@ export default function TenantPage() {
       <div className="flex items-center justify-center h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin" />
-          <p className="text-[11px] text-[var(--foreground-dim)]">Loading workspace...</p>
+          <p className="text-[11px] text-foreground-dim">Loading workspace...</p>
         </div>
       </div>
     );
@@ -150,9 +150,7 @@ export default function TenantPage() {
 
   if (!tenant)
     return (
-      <div className="text-center py-20 text-sm text-[var(--foreground-muted)]">
-        Workspace not found
-      </div>
+      <div className="text-center py-20 text-sm text-foreground-muted">Workspace not found</div>
     );
 
   const statusChartData =
@@ -165,15 +163,11 @@ export default function TenantPage() {
   return (
     <div className="space-y-7">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[var(--border-subtle)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border-subtle">
         <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--foreground)]">
-            {tenant.name}
-          </h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-foreground">{tenant.name}</h1>
           {tenant.description && (
-            <p className="text-xs mt-1 max-w-xl text-[var(--foreground-muted)]">
-              {tenant.description}
-            </p>
+            <p className="text-xs mt-1 max-w-xl text-foreground-muted">{tenant.description}</p>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -201,7 +195,7 @@ export default function TenantPage() {
             return (
               <div
                 key={key}
-                className="relative overflow-hidden rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)]"
+                className="relative overflow-hidden rounded-xl bg-surface-2 border border-border-subtle"
               >
                 <div
                   className={`absolute left-0 top-0 w-px h-full ${
@@ -212,11 +206,11 @@ export default function TenantPage() {
                   <div className="flex items-center justify-between mb-2.5">
                     <p className="field-label">{label}</p>
                     <Icon
-                      className={`w-3.5 h-3.5 shrink-0 ${isDanger ? 'text-[#e05555]' : 'text-[var(--foreground-dim)]'}`}
+                      className={`w-3.5 h-3.5 shrink-0 ${isDanger ? 'text-[#e05555]' : 'text-foreground-dim'}`}
                     />
                   </div>
                   <p
-                    className={`text-2xl font-black tracking-tight ${isDanger ? 'text-[#f87171]' : 'text-[var(--foreground)]'}`}
+                    className={`text-2xl font-black tracking-tight ${isDanger ? 'text-[#f87171]' : 'text-foreground'}`}
                   >
                     {val}
                   </p>
@@ -231,12 +225,10 @@ export default function TenantPage() {
       {stats && stats.totalTasks > 0 && (
         <div className="grid gap-4 md:grid-cols-12">
           {/* Line chart */}
-          <div className="md:col-span-7 rounded-xl overflow-hidden bg-[var(--surface-2)] border border-[var(--border-subtle)]">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--surface-1)]">
-              <TrendingUp className="w-3.5 h-3.5 text-[var(--foreground-dim)]" />
-              <span className="text-xs font-bold text-[var(--foreground)]">
-                Task Productivity Trend
-              </span>
+          <div className="md:col-span-7 rounded-xl overflow-hidden bg-surface-2 border border-border-subtle">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1">
+              <TrendingUp className="w-3.5 h-3.5 text-foreground-dim" />
+              <span className="text-xs font-bold text-foreground">Task Productivity Trend</span>
             </div>
             <div className="p-4">
               <div className="h-56 w-full">
@@ -296,10 +288,10 @@ export default function TenantPage() {
           </div>
 
           {/* Pie chart */}
-          <div className="md:col-span-5 rounded-xl overflow-hidden bg-[var(--surface-2)] border border-[var(--border-subtle)]">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--surface-1)]">
-              <Activity className="w-3.5 h-3.5 text-[var(--foreground-dim)]" />
-              <span className="text-xs font-bold text-[var(--foreground)]">Task Distribution</span>
+          <div className="md:col-span-5 rounded-xl overflow-hidden bg-surface-2 border border-border-subtle">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1">
+              <Activity className="w-3.5 h-3.5 text-foreground-dim" />
+              <span className="text-xs font-bold text-foreground">Task Distribution</span>
             </div>
             <div className="p-4">
               {statusChartData.length > 0 && (
@@ -332,9 +324,7 @@ export default function TenantPage() {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-xl font-black text-[var(--foreground)]">
-                        {stats.totalTasks}
-                      </span>
+                      <span className="text-xl font-black text-foreground">{stats.totalTasks}</span>
                       <span className="field-label">Total</span>
                     </div>
                   </div>
@@ -345,7 +335,7 @@ export default function TenantPage() {
                           className="w-1.5 h-1.5 rounded-sm"
                           style={{ background: item.color }}
                         />
-                        <span className="text-[10px] font-medium capitalize text-[var(--foreground-dim)]">
+                        <span className="text-[10px] font-medium capitalize text-foreground-dim">
                           {item.name} ({item.value})
                         </span>
                       </div>
@@ -362,7 +352,7 @@ export default function TenantPage() {
       <div className="grid gap-4 md:grid-cols-12">
         {/* Projects */}
         <div className="md:col-span-8 space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+          <div className="flex items-center justify-between pb-2 border-b border-border-subtle">
             <h2 className="section-heading flex items-center gap-2">
               <FolderKanban className="w-3.5 h-3.5" />
               Projects
@@ -385,36 +375,34 @@ export default function TenantPage() {
                     href={`/dashboard/project/${project.id}`}
                     className="group block"
                   >
-                    <div className="relative overflow-hidden rounded-xl transition-all duration-200 hover:-translate-y-0.5 bg-[var(--surface-2)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)]">
+                    <div className="relative overflow-hidden rounded-xl transition-all duration-200 hover:-translate-y-0.5 bg-surface-2 border border-border-subtle hover:border-border-strong">
                       <div className="p-4">
                         <div className="flex items-start justify-between gap-3 mb-3">
                           <div
-                            className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-extrabold shrink-0 border data-[hascolor=true]:bg-[color-mix(in_srgb,var(--project-color)_13%,transparent)] data-[hascolor=false]:bg-[var(--surface-3)] data-[hascolor=true]:border-[color-mix(in_srgb,var(--project-color)_25%,transparent)] data-[hascolor=false]:border-[var(--border-strong)] data-[hascolor=true]:text-[var(--project-color)] data-[hascolor=false]:text-[var(--foreground-muted)]"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-extrabold shrink-0 border data-[hascolor=true]:bg-[color-mix(in_srgb,var(--project-color)_13%,transparent)] data-[hascolor=false]:bg-surface-3 data-[hascolor=true]:border-[color-mix(in_srgb,var(--project-color)_25%,transparent)] data-[hascolor=false]:border-border-strong data-[hascolor=true]:text-(--project-color) data-[hascolor=false]:text-foreground-muted"
                             data-hascolor={hasColor}
                             style={{ '--project-color': project.color } as React.CSSProperties}
                           >
                             {project.name.charAt(0).toUpperCase()}
                           </div>
-                          <ArrowRight className="w-4 h-4 mt-1 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--foreground-dim)]" />
+                          <ArrowRight className="w-4 h-4 mt-1 opacity-0 group-hover:opacity-100 transition-opacity text-foreground-dim" />
                         </div>
-                        <h3 className="text-sm font-bold mb-1 text-[var(--foreground)]">
-                          {project.name}
-                        </h3>
-                        <p className="text-xs line-clamp-2 mb-4 leading-relaxed text-[var(--foreground-muted)]">
+                        <h3 className="text-sm font-bold mb-1 text-foreground">{project.name}</h3>
+                        <p className="text-xs line-clamp-2 mb-4 leading-relaxed text-foreground-muted">
                           {project.description || 'No description provided.'}
                         </p>
-                        <div className="flex items-center gap-4 pt-3 border-t border-[var(--border-subtle)]">
-                          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--foreground-dim)]">
+                        <div className="flex items-center gap-4 pt-3 border-t border-border-subtle">
+                          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-foreground-dim">
                             <CheckSquare className="w-3 h-3" />
                             View tasks
                           </div>
                           <div
-                            className="flex items-center gap-1.5 text-[10px] font-semibold data-[hascolor=true]:text-[var(--project-color)] data-[hascolor=false]:text-[var(--foreground-dim)]"
+                            className="flex items-center gap-1.5 text-[10px] font-semibold data-[hascolor=true]:text-(--project-color) data-[hascolor=false]:text-foreground-dim"
                             data-hascolor={hasColor}
                             style={{ '--project-color': project.color } as React.CSSProperties}
                           >
                             <div
-                              className="w-1.5 h-1.5 rounded-full data-[hascolor=true]:bg-[var(--project-color)] data-[hascolor=false]:bg-[var(--border-strong)]"
+                              className="w-1.5 h-1.5 rounded-full data-[hascolor=true]:bg-(--project-color) data-[hascolor=false]:bg-border-strong"
                               data-hascolor={hasColor}
                             />
                             Active
@@ -427,12 +415,10 @@ export default function TenantPage() {
               })}
             </div>
           ) : (
-            <div className="rounded-xl py-12 text-center bg-[var(--surface-2)] border border-dashed border-[var(--border-default)]">
-              <FolderKanban className="w-8 h-8 mx-auto mb-3 text-[var(--foreground-dim)]" />
-              <h3 className="text-sm font-bold mb-1 text-[var(--foreground)]">
-                No active projects
-              </h3>
-              <p className="text-xs mb-4 text-[var(--foreground-muted)]">
+            <div className="rounded-xl py-12 text-center bg-surface-2 border border-dashed border-border-default">
+              <FolderKanban className="w-8 h-8 mx-auto mb-3 text-foreground-dim" />
+              <h3 className="text-sm font-bold mb-1 text-foreground">No active projects</h3>
+              <p className="text-xs mb-4 text-foreground-muted">
                 Create a new project to begin managing tasks.
               </p>
               <CreateProjectDialog tenantId={tenantId} onSuccess={onProjectCreated}>
@@ -447,29 +433,29 @@ export default function TenantPage() {
 
         {/* Activity */}
         <div className="md:col-span-4 space-y-3">
-          <div className="pb-2 border-b border-[var(--border-subtle)]">
+          <div className="pb-2 border-b border-border-subtle">
             <h2 className="section-heading flex items-center gap-2">
               <Activity className="w-3.5 h-3.5" />
               Activity Feed
             </h2>
           </div>
-          <div className="rounded-xl overflow-hidden bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+          <div className="rounded-xl overflow-hidden bg-surface-2 border border-border-subtle">
             <div className="p-3.5">
               {stats && stats.recentActivities.length > 0 ? (
                 <div className="space-y-3.5 max-h-72 overflow-y-auto pr-1">
                   {stats.recentActivities.map((act) => (
                     <div key={act.id} className="flex items-start gap-2.5 text-xs">
-                      <div className="w-1 h-1 rounded-full flex-shrink-0 mt-1.5 bg-[var(--foreground-dim)]" />
+                      <div className="w-1 h-1 rounded-full shrink-0 mt-1.5 bg-foreground-dim" />
                       <div className="space-y-0.5 min-w-0">
-                        <p className="text-[var(--foreground-muted)]">
-                          <span className="font-semibold text-[var(--foreground)]">
+                        <p className="text-foreground-muted">
+                          <span className="font-semibold text-foreground">
                             {act.userFullName || 'System'}
                           </span>{' '}
-                          <span className="uppercase text-[10px] font-mono font-bold text-[var(--foreground-dim)]">
+                          <span className="uppercase text-[10px] font-mono font-bold text-foreground-dim">
                             {act.action.replace(/_/g, ' ')}
                           </span>
                         </p>
-                        <p className="text-[10px] font-mono text-[var(--foreground-dim)]">
+                        <p className="text-[10px] font-mono text-foreground-dim">
                           {new Date(act.createdAt).toLocaleString()}
                         </p>
                       </div>
@@ -477,7 +463,7 @@ export default function TenantPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-xs text-[var(--foreground-dim)]">
+                <div className="text-center py-8 text-xs text-foreground-dim">
                   No recent activity.
                 </div>
               )}
