@@ -88,7 +88,21 @@ export async function verifyTenantRole(
     viewer: 1,
   }
 
-  return roleHierarchy[member.role] >= roleHierarchy[requiredRole]
+  // If system role, evaluate hierarchy
+  if (member.role in roleHierarchy) {
+    return roleHierarchy[member.role] >= roleHierarchy[requiredRole]
+  }
+
+  // If custom role, assign fallback role level based on keyword analysis to prevent lockout
+  let customRoleLevel = 2; // Default to member
+  const lowerRole = member.role.toLowerCase()
+  if (lowerRole.includes('admin') || lowerRole.includes('owner') || lowerRole.includes('manager') || lowerRole.includes('lead') || lowerRole.includes('boss')) {
+    customRoleLevel = 3;
+  } else if (lowerRole.includes('view') || lowerRole.includes('guest') || lowerRole.includes('read')) {
+    customRoleLevel = 1;
+  }
+
+  return customRoleLevel >= roleHierarchy[requiredRole]
 }
 
 /**

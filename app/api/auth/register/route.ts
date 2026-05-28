@@ -6,9 +6,15 @@ import { requireAuth, requirePermission } from '@/lib/api-auth'
 
 export async function POST(request: NextRequest) {
   try {
-    // Only Super Admin or users with `create_users` permission can create new users
-    const authContext = await requireAuth()
-    await requirePermission(authContext.userId, 'create_users')
+    // If authenticated, require `create_users` permission. If not, allow public registration.
+    let authContext = null
+    try {
+      authContext = await requireAuth()
+    } catch (e) {}
+
+    if (authContext) {
+      await requirePermission(authContext.userId, 'create_users')
+    }
 
     const body = await request.json()
     const { email, password, fullName } = body

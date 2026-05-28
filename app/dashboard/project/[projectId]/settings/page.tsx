@@ -53,7 +53,7 @@ export default function ProjectSettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <Link href={`/dashboard/project/${projectId}`}>
         <Button variant="ghost" className="gap-2 pl-0 hover:pl-0">

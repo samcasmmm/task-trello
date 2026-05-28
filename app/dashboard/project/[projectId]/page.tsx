@@ -3,14 +3,21 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Settings, LayoutGrid, List, Calendar } from 'lucide-react'
+import { Plus, Settings, LayoutGrid, List, Calendar, CalendarDays, Layers, BarChart2, Eye, EyeOff } from 'lucide-react'
 import CreateTaskDialog from '@/components/create-task-dialog'
 import TaskBoard from '@/components/task-board'
 import TaskList from '@/components/task-list'
 import TaskCalendar from '@/components/task-calendar'
 import Link from 'next/link'
+
+// Extracted Components
+import ProjectKpiCards from '@/components/project-kpi-cards'
+import ProjectCharts from '@/components/project-charts'
+import ProjectEmptyState from '@/components/project-empty-state'
+
+// Advanced Views
+import TaskTimeline from '@/components/task-timeline'
+import TaskSwimlanes from '@/components/task-swimlanes'
 
 interface Project {
   id: string
@@ -28,32 +35,50 @@ interface Task {
   assigned_to_user?: { fullName: string; avatarUrl?: string } | null
 }
 
+interface StatsData {
+  totalTasks: number
+  completedTasks: number
+  inProgressTasks: number
+  tasksDueToday: number
+  overdueTasks: number
+  tasksByStatus: { status: string; count: number }[]
+  tasksByPriority: { priority: string; count: number }[]
+  monthlyTrend: { name: string; created: number; completed: number }[]
+}
+
+const VIEWS = [
+  { key: 'board', label: 'Board', Icon: LayoutGrid },
+  { key: 'list', label: 'List', Icon: List },
+  { key: 'calendar', label: 'Calendar', Icon: Calendar },
+  { key: 'timeline', label: 'Timeline / Gantt', Icon: CalendarDays },
+  { key: 'swimlanes', label: 'Swimlanes', Icon: Layers },
+]
+
 export default function ProjectPage() {
   const params = useParams()
   const projectId = params.projectId as string
   const [project, setProject] = useState<Project | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
+  const [stats, setStats] = useState<StatsData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeView, setActiveView] = useState<'board' | 'list' | 'calendar'>('board')
+  const [showAnalytics, setShowAnalytics] = useState(false)
+  const [activeView, setActiveView] = useState<'board' | 'list' | 'calendar' | 'timeline' | 'swimlanes'>(
+    'board'
+  )
 
   const fetchData = async () => {
     try {
-      const [projectRes, tasksRes] = await Promise.all([
+      const [projectRes, tasksRes, statsRes] = await Promise.all([
         fetch(`/api/projects/${projectId}`),
         fetch(`/api/projects/${projectId}/tasks`),
+        fetch(`/api/projects/${projectId}/stats`),
       ])
-
-      if (!projectRes.ok || !tasksRes.ok) {
-        throw new Error('Failed to fetch data')
-      }
-
-      const projectData = await projectRes.json()
-      const tasksData = await tasksRes.json()
-
-      setProject(projectData)
-      setTasks(tasksData)
-    } catch (error) {
-      console.error('Error fetching project data:', error)
+      if (!projectRes.ok || !tasksRes.ok) throw new Error('Failed')
+      setProject(await projectRes.json())
+      setTasks(await tasksRes.json())
+      if (statsRes.ok) setStats(await statsRes.json())
+    } catch (e) {
+      console.error(e)
     } finally {
       setLoading(false)
     }
@@ -63,24 +88,24 @@ export default function ProjectPage() {
     fetchData()
   }, [projectId])
 
-  const onTaskCreated = (newTask: any) => {
-    setTasks((prev) => [...prev, newTask])
+  const onTaskCreated = (t: any) => {
+    setTasks((p) => [...p, t])
+    fetchData()
   }
 
-  const onTaskMoved = (taskId: string, newStatus: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+  const onTaskMoved = (taskId: string, newStatus: string) =>
+    setTasks((p) =>
+      p.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     )
-  }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white mb-4">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-900 border-t-transparent" />
-          </div>
-          <p className="text-sm text-muted-foreground">Loading project...</p>
+      <div className='flex items-center justify-center h-[60vh]'>
+        <div className='flex flex-col items-center gap-3'>
+          <div className='w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin' />
+          <p className='text-[11px]' style={{ color: 'var(--foreground-dim)' }}>
+            Loading project...
+          </p>
         </div>
       </div>
     )
@@ -88,103 +113,179 @@ export default function ProjectPage() {
 
   if (!project) {
     return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold text-gray-900">Project not found</h1>
+      <div
+        className='text-center py-20 text-sm'
+        style={{ color: 'var(--foreground-muted)' }}
+      >
+        Project not found
       </div>
     )
   }
 
+  const doneTasks = tasks.filter((t) => t.status === 'done').length
+  const progress =
+    tasks.length > 0 ? Math.round((doneTasks / tasks.length) * 100) : 0
+
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
+      {/* Breadcrumb */}
+      <div className='flex items-center gap-1.5 text-[11px]'>
+        <Link
+          href='/dashboard'
+          style={{ color: 'var(--foreground-dim)' }}
+          className='hover:text-white transition-colors'
+        >
+          Dashboard
+        </Link>
+        <span style={{ color: 'var(--foreground-dim)' }}>/</span>
+        <span
+          style={{ color: 'var(--foreground-muted)' }}
+          className='font-medium'
+        >
+          {project.name}
+        </span>
+      </div>
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
+      <div
+        className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5'
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}
+      >
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <div
-              className="w-4 h-4 rounded-full"
-              style={{ backgroundColor: project.color }}
-            />
-            <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-          </div>
+          <h1
+            className='text-xl font-extrabold tracking-tight'
+            style={{ color: 'var(--foreground)' }}
+          >
+            {project.name}
+          </h1>
           {project.description && (
-            <p className="text-gray-500 text-sm ml-7">{project.description}</p>
+            <p
+              className='text-xs mt-1 max-w-xl'
+              style={{ color: 'var(--foreground-muted)' }}
+            >
+              {project.description}
+            </p>
+          )}
+          {tasks.length > 0 && (
+            <div className='flex items-center gap-2.5 mt-3'>
+              <div
+                className='w-32 h-1 rounded-full overflow-hidden'
+                style={{ background: 'var(--surface-3)' }}
+              >
+                <div
+                  className='h-full rounded-full transition-all duration-500'
+                  style={{
+                    width: `${progress}%`,
+                    background:
+                      progress === 100 ? '#6ee7b7' : 'rgba(255,255,255,0.3)',
+                  }}
+                />
+              </div>
+              <span
+                className='text-[10px] font-semibold'
+                style={{ color: 'var(--foreground-dim)' }}
+              >
+                {doneTasks}/{tasks.length} done
+              </span>
+            </div>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2 flex-shrink-0'>
+          <Button
+            size='sm'
+            onClick={() => setShowAnalytics(!showAnalytics)}
+            className='btn-ghost text-xs h-8 px-3 rounded-md flex items-center gap-1.5'
+          >
+            {showAnalytics ? <EyeOff className='w-3.5 h-3.5' /> : <Eye className='w-3.5 h-3.5' />}
+            {showAnalytics ? 'Hide Analytics' : 'Show Analytics'}
+          </Button>
           <Link href={`/dashboard/project/${projectId}/settings`}>
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-2" />
+            <Button size='sm' className='btn-ghost text-xs h-8 px-3 rounded-md'>
+              <Settings className='w-3.5 h-3.5 mr-1.5' />
               Settings
             </Button>
           </Link>
           <CreateTaskDialog projectId={projectId} onSuccess={onTaskCreated}>
-            <Button size="sm">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button
+              size='sm'
+              className='btn-primary text-xs h-8 px-3 rounded-md'
+            >
+              <Plus className='w-3.5 h-3.5 mr-1.5' />
               New Task
             </Button>
           </CreateTaskDialog>
         </div>
       </div>
 
-      {/* View Tabs */}
-      <Tabs value={activeView} onValueChange={(v) => setActiveView(v as any)}>
-        <div className="flex items-center justify-between mb-6">
-          <TabsList className="bg-gray-100 p-1">
-            <TabsTrigger value="board" className="gap-2 text-sm">
-              <LayoutGrid className="w-4 h-4" />
-              Board
-            </TabsTrigger>
-            <TabsTrigger value="list" className="gap-2 text-sm">
-              <List className="w-4 h-4" />
-              List
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="gap-2 text-sm">
-              <Calendar className="w-4 h-4" />
-              Calendar
-            </TabsTrigger>
-          </TabsList>
-          <span className="text-xs text-gray-400 font-medium">
-            {tasks.length} task{tasks.length !== 1 ? 's' : ''} total
-          </span>
+      {/* KPI row (Conditional) */}
+      {showAnalytics && <ProjectKpiCards stats={stats} />}
+
+      {/* Monthly charts (Conditional) */}
+      {showAnalytics && <ProjectCharts stats={stats} />}
+
+      {/* View tabs & Action panel */}
+      <div className='flex items-center justify-between pt-2'>
+        <div
+          className='flex items-center gap-0.5 p-0.5 rounded-lg'
+          style={{
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border-subtle)',
+          }}
+        >
+          {VIEWS.map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveView(key as any)}
+              className='flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all'
+              style={{
+                background:
+                  activeView === key ? 'var(--surface-3)' : 'transparent',
+                color:
+                  activeView === key
+                    ? 'var(--foreground)'
+                    : 'var(--foreground-dim)',
+              }}
+            >
+              <Icon className='w-3.5 h-3.5' />
+              {label}
+            </button>
+          ))}
         </div>
+        <span
+          className='text-[11px] font-medium'
+          style={{ color: 'var(--foreground-dim)' }}
+        >
+          {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+        </span>
+      </div>
 
-        <TabsContent value="board">
-          {tasks.length > 0 ? (
-            <TaskBoard
-              projectId={projectId}
-              tasks={tasks}
-              onTaskMoved={onTaskMoved}
-              onTaskCreated={onTaskCreated}
-            />
-          ) : (
-            <Card>
-              <div className="py-16 text-center">
-                <LayoutGrid className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No tasks yet
-                </h3>
-                <p className="text-gray-500 mb-6 text-sm">
-                  Create your first task to start organizing your project workflow
-                </p>
-                <CreateTaskDialog projectId={projectId} onSuccess={onTaskCreated}>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create First Task
-                  </Button>
-                </CreateTaskDialog>
-              </div>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="list">
-          <TaskList projectId={projectId} tasks={tasks} />
-        </TabsContent>
-
-        <TabsContent value="calendar">
-          <TaskCalendar projectId={projectId} tasks={tasks} />
-        </TabsContent>
-      </Tabs>
+      {/* View content */}
+      {activeView === 'board' &&
+        (tasks.length > 0 ? (
+          <TaskBoard
+            projectId={projectId}
+            tasks={tasks}
+            onTaskMoved={onTaskMoved}
+            onTaskCreated={onTaskCreated}
+          />
+        ) : (
+          <ProjectEmptyState
+            projectId={projectId}
+            onTaskCreated={onTaskCreated}
+          />
+        ))}
+      {activeView === 'list' && (
+        <TaskList projectId={projectId} tasks={tasks} />
+      )}
+      {activeView === 'calendar' && (
+        <TaskCalendar projectId={projectId} tasks={tasks} />
+      )}
+      {activeView === 'timeline' && (
+        <TaskTimeline tasks={tasks} />
+      )}
+      {activeView === 'swimlanes' && (
+        <TaskSwimlanes tasks={tasks} />
+      )}
     </div>
   )
 }

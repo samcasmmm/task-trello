@@ -34,6 +34,7 @@ export const tenantMembers = pgTable(
       tenantId: text('tenantId').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
       userId: text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
       role: text('role').notNull().default('member'),
+      reportsToId: text('reportsToId').references(() => users.id, { onDelete: 'set null' }),
       joinedAt: timestamp('joinedAt').defaultNow().notNull(),
       updatedAt: timestamp('updatedAt').defaultNow().notNull(),
    },
@@ -44,6 +45,7 @@ export const tenantMembers = pgTable(
       ),
       tenantIndex: index('tenant_members_tenantId_idx').on(member.tenantId),
       userIndex: index('tenant_members_userId_idx').on(member.userId),
+      reportsToIndex: index('tenant_members_reportsToId_idx').on(member.reportsToId),
    })
 )
 
@@ -153,7 +155,13 @@ export const notifications = pgTable('notifications', {
    read: boolean('read').notNull().default(false),
    createdAt: timestamp('createdAt').defaultNow().notNull(),
    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
-})
+},
+   (table) => ({
+      userIdIndex: index('notifications_userId_idx').on(table.userId),
+      readIndex: index('notifications_read_idx').on(table.read),
+      createdAtIndex: index('notifications_createdAt_idx').on(table.createdAt),
+   })
+)
 
 export const auditLogs = pgTable('audit_logs', {
    id: text('id').primaryKey(),
@@ -161,16 +169,26 @@ export const auditLogs = pgTable('audit_logs', {
    action: text('action').notNull(),
    metadata: json('metadata'),
    createdAt: timestamp('createdAt').defaultNow().notNull(),
-})
+},
+   (table) => ({
+      userIdIndex: index('audit_logs_userId_idx').on(table.userId),
+      createdAtIndex: index('audit_logs_createdAt_idx').on(table.createdAt),
+   })
+)
 
 // RBAC: roles, permissions, user_roles, role_permissions
 export const roles = pgTable('roles', {
    id: text('id').primaryKey(),
+   tenantId: text('tenantId').references(() => tenants.id, { onDelete: 'cascade' }),
    name: text('name').notNull(),
    description: text('description'),
    createdAt: timestamp('createdAt').defaultNow().notNull(),
    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
-})
+},
+   (role) => ({
+      tenantIdIndex: index('roles_tenantId_idx').on(role.tenantId),
+   })
+)
 
 export const permissions = pgTable('permissions', {
    id: text('id').primaryKey(),
@@ -192,7 +210,12 @@ export const userRoles = pgTable('user_roles', {
    roleId: text('roleId').notNull().references(() => roles.id, { onDelete: 'cascade' }),
    tenantId: text('tenantId').references(() => tenants.id, { onDelete: 'cascade' }),
    assignedAt: timestamp('assignedAt').defaultNow().notNull(),
-})
+},
+   (table) => ({
+      userIdIndex: index('user_roles_userId_idx').on(table.userId),
+      tenantIdIndex: index('user_roles_tenantId_idx').on(table.tenantId),
+   })
+)
 
 // Labels and task-members (many-to-many)
 export const labels = pgTable('labels', {

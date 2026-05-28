@@ -22,31 +22,53 @@ export default function TaskAttachments({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className='flex items-center gap-2'>
-          <File className='w-5 h-5' />
+    <Card
+      className='rounded-lg overflow-hidden'
+      style={{
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border-subtle)',
+      }}
+    >
+      <CardHeader
+        className='pb-3 border-b'
+        style={{
+          background: 'var(--surface-1)',
+          borderColor: 'var(--border-subtle)',
+        }}
+      >
+        <CardTitle className='text-sm font-bold text-slate-300 flex items-center gap-2'>
+          <File className='w-4 h-4 text-slate-500' />
           Attachments ({attachments.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className='space-y-4'>
+      <CardContent className='p-4'>
         {attachments.length > 0 ? (
           <div className='space-y-2'>
             {attachments.map((attachment: any) => (
               <div
                 key={attachment.id}
-                className='flex items-center gap-3 p-3 rounded-lg bg-gray-50'
+                className='flex items-center gap-3 p-3 rounded-lg border'
+                style={{
+                  background: 'var(--surface-3)',
+                  borderColor: 'var(--border-subtle)',
+                }}
               >
-                <div className='flex-shrink-0 w-10 h-10 bg-blue-50 rounded flex items-center justify-center'>
-                  <span className='text-xs font-bold text-blue-600'>
+                <div
+                  className='flex-shrink-0 w-10 h-10 rounded flex items-center justify-center border'
+                  style={{
+                    background: 'var(--surface-1)',
+                    borderColor: 'var(--border-strong)',
+                  }}
+                >
+                  <span className='text-[10px] font-black text-slate-400'>
                     {getFileIcon(attachment.filename)}
                   </span>
                 </div>
                 <div className='min-w-0 flex-1'>
-                  <p className='text-sm font-medium text-gray-900 truncate'>
+                  <p className='text-xs font-semibold text-slate-200 truncate'>
                     {attachment.filename}
                   </p>
-                  <p className='text-xs text-gray-600'>
+                  <p className='text-[10px] text-slate-500 mt-0.5'>
                     {getFileSize(attachment.fileSize)}
                   </p>
                 </div>
@@ -54,7 +76,7 @@ export default function TaskAttachments({
             ))}
           </div>
         ) : (
-          <p className='text-sm text-gray-500 text-center py-4'>
+          <p className='text-xs text-slate-500 text-center py-6'>
             No attachments yet
           </p>
         )}

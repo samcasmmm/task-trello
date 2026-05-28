@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, verifyTenantAccess } from '@/lib/api-auth'
 import db, { projects, tasks, taskComments, users, eq } from '@/lib/drizzle'
+import { createAuditLog } from '@/lib/audit'
+import { createNotification } from '@/lib/notification'
 
 /**
  * POST /api/tasks/[taskId]/comments - Add comment to task
@@ -59,6 +61,21 @@ export async function POST(
     const [user] = await db.query.users.findMany({
       where: eq(users.id, authContext.userId),
     })
+
+    // Trigger Audit Log
+    await createAuditLog(authContext.userId, 'comment_added', {
+      taskId,
+      commentId: comment.id,
+      contentLength: content.length,
+    })
+
+    // Trigger Notification for task assignee (if it's not the commenter themselves)
+    if (task.assignedToId && task.assignedToId !== authContext.userId) {
+      await createNotification(
+        task.assignedToId,
+        `${user?.fullName || authContext.email} commented on "${task.title}".`
+      )
+    }
 
     return NextResponse.json(
       {

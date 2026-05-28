@@ -3,14 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Menu, X, LogOut, Settings, Plus, Folder, Bell } from 'lucide-react';
+  LayoutDashboard, Bell, FolderKanban, LogOut,
+  ChevronDown, ShieldAlert, Menu, X, Zap,
+} from 'lucide-react';
 
 export default function DashboardNav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,252 +14,190 @@ export default function DashboardNav() {
   const [currentTenant, setCurrentTenant] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [notificationsCount, setNotificationsCount] = useState(0);
+  const [tenantOpen, setTenantOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const loadUser = async () => {
-      const response = await fetch('/api/auth/me');
-      const data = await response.json();
-      if (data.user) {
-        setUser(data.user);
-      }
-    };
-    loadUser();
-  }, []);
-
-  useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        const response = await fetch('/api/notifications');
-        if (response.ok) {
-          const notifications = await response.json();
-          setNotificationsCount(
-            notifications.filter((item: any) => item.read === false).length,
-          );
-        }
-      } catch (error) {
-        console.error('Failed to load notifications:', error);
-      }
-    };
-
-    loadNotifications();
-  }, []);
-
-  useEffect(() => {
-    const loadTenants = async () => {
-      try {
-        const response = await fetch('/api/tenants');
-        if (response.ok) {
-          const tenantList = await response.json();
-          setTenants(tenantList);
-          if (tenantList.length > 0) {
-            setCurrentTenant(tenantList[0]);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load tenants:', error);
-      }
-    };
-
-    loadTenants();
+    fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.user) setUser(d.user); });
+    fetch('/api/notifications').then(r => r.ok ? r.json() : []).then(d => {
+      setNotificationsCount(Array.isArray(d) ? d.filter((n: any) => !n.read).length : 0);
+    }).catch(() => {});
+    fetch('/api/tenants').then(r => r.ok ? r.json() : []).then(d => {
+      if (Array.isArray(d)) { setTenants(d); if (d.length > 0) setCurrentTenant(d[0]); }
+    }).catch(() => {});
   }, []);
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
   };
+
+  const isActive = (href: string) => pathname === href;
+  const isTenantActive = (id: string) => pathname.includes(id);
 
   return (
     <>
-      {/* Mobile menu button */}
-      <div className='hidden max-md:block md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b z-50'>
-        <div className='flex items-center justify-between h-full px-4'>
-          <div className='flex items-center gap-2'>
-            <h1 className='font-semibold text-lg'>Task Manager</h1>
-            {notificationsCount > 0 && (
-              <span className='rounded-full bg-red-500 px-2 py-1 text-xs font-semibold text-white'>
-                {notificationsCount}
-              </span>
-            )}
+      {/* Mobile topbar */}
+      <div className='md:hidden fixed top-0 left-0 right-0 h-12 z-50 flex items-center justify-between px-4'
+        style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border-subtle)' }}>
+        <div className='flex items-center gap-2'>
+          <div className='w-6 h-6 rounded flex items-center justify-center'
+            style={{ background: 'var(--surface-3)', border: '1px solid var(--border-default)' }}>
+            <Zap className='w-3.5 h-3.5' style={{ color: 'var(--foreground-muted)' }} />
           </div>
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className='inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:bg-gray-100'
-          >
-            {isOpen ? <X className='w-6 h-6' /> : <Menu className='w-6 h-6' />}
-          </button>
+          <span className='text-sm font-bold' style={{ color: 'var(--foreground)' }}>TaskEngine</span>
         </div>
+        <button onClick={() => setIsOpen(!isOpen)}
+          className='p-1.5 rounded transition-colors'
+          style={{ color: 'var(--foreground-muted)' }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--foreground)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'var(--foreground-muted)')}>
+          {isOpen ? <X className='w-4 h-4' /> : <Menu className='w-4 h-4' />}
+        </button>
       </div>
 
       {/* Sidebar */}
-      <div
-        className={`fixed md:static md:w-64 h-full bg-white border-r transition-transform duration-300 z-40 ${
-          isOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'
+      <aside
+        className={`fixed md:static md:flex md:flex-col h-full w-[216px] z-40 flex flex-col transition-transform duration-300 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
+        style={{ background: 'var(--surface-1)', borderRight: '1px solid var(--border-subtle)' }}
       >
-        <div className='flex flex-col h-full'>
-          {/* Header */}
-          <div className='p-6 border-b hidden md:block'>
-            <div className='flex items-center justify-between gap-3'>
-              <h1 className='text-xl font-bold text-gray-900'>Task Manager</h1>
-              <Button
-                variant='ghost'
-                className='group text-gray-600 hover:text-gray-900'
-              >
-                <Bell className='w-4 h-4' />
-                {notificationsCount > 0 && (
-                  <span className='ml-2 rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white'>
-                    {notificationsCount}
-                  </span>
-                )}
-              </Button>
+        {/* Brand */}
+        <div className='hidden md:flex items-center gap-2.5 px-4 py-[14px]'
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <div className='w-7 h-7 rounded flex items-center justify-center flex-shrink-0'
+            style={{ background: 'var(--surface-3)', border: '1px solid var(--border-strong)' }}>
+            <Zap className='w-3.5 h-3.5' style={{ color: 'var(--foreground-muted)' }} />
+          </div>
+          <div className='flex-1 min-w-0'>
+            <p className='text-[13px] font-bold leading-none' style={{ color: 'var(--foreground)' }}>TaskEngine</p>
+            <p className='text-[10px] mt-0.5' style={{ color: 'var(--foreground-dim)' }}>Project Manager</p>
+          </div>
+          {notificationsCount > 0 && (
+            <span className='text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0'
+              style={{ background: 'var(--surface-3)', color: 'var(--foreground-muted)', border: '1px solid var(--border-strong)' }}>
+              {notificationsCount}
+            </span>
+          )}
+        </div>
+
+        {/* Workspace switcher */}
+        {tenants.length > 0 && (
+          <div className='px-3 py-3' style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+            <p className='section-heading mb-2 px-1'>Workspace</p>
+            <div className='relative'>
+              <button onClick={() => setTenantOpen(!tenantOpen)}
+                className='w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-left transition-colors'
+                style={{
+                  background: tenantOpen ? 'var(--surface-3)' : 'var(--surface-2)',
+                  border: '1px solid var(--border-default)',
+                  color: 'var(--foreground)',
+                }}>
+                <div className='w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold flex-shrink-0'
+                  style={{ background: 'var(--surface-3)', border: '1px solid var(--border-strong)', color: 'var(--foreground-muted)' }}>
+                  {currentTenant?.name?.charAt(0).toUpperCase()}
+                </div>
+                <span className='text-xs font-semibold flex-1 truncate' style={{ color: 'var(--foreground)' }}>
+                  {currentTenant?.name || 'Select'}
+                </span>
+                <ChevronDown className={`w-3 h-3 flex-shrink-0 transition-transform ${tenantOpen ? 'rotate-180' : ''}`}
+                  style={{ color: 'var(--foreground-dim)' }} />
+              </button>
+
+              {tenantOpen && (
+                <div className='absolute top-full left-0 right-0 mt-1 rounded-md overflow-hidden z-50'
+                  style={{ background: 'var(--surface-2)', border: '1px solid var(--border-default)', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+                  {tenants.map(t => (
+                    <button key={t.id}
+                      onClick={() => { setCurrentTenant(t); setTenantOpen(false); setIsOpen(false); router.push(`/dashboard/tenant/${t.id}`); }}
+                      className='w-full flex items-center gap-2 px-2.5 py-2 text-left text-xs transition-colors'
+                      style={{ color: currentTenant?.id === t.id ? 'var(--foreground)' : 'var(--foreground-muted)' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-3)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <div className='w-4 h-4 rounded flex items-center justify-center text-[8px] font-bold flex-shrink-0'
+                        style={{ background: 'var(--surface-3)', border: '1px solid var(--border-strong)', color: 'var(--foreground-dim)' }}>
+                        {t.name?.charAt(0)}
+                      </div>
+                      <span className='truncate font-medium'>{t.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
+        )}
 
-          {/* Tenant selector */}
-          {tenants.length > 0 && (
-            <div className='p-4 border-b'>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant='outline' className='w-full justify-between'>
-                    <span className='truncate'>
-                      {currentTenant?.name || 'Select Tenant'}
-                    </span>
-                    <Folder className='w-4 h-4 ml-2' />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className='w-56'>
-                  {tenants.map((tenant) => (
-                    <DropdownMenuItem
-                      key={tenant.id}
-                      onClick={() => {
-                        setCurrentTenant(tenant);
-                        setIsOpen(false);
-                        router.push(`/dashboard/tenant/${tenant.id}`);
-                      }}
-                    >
-                      {tenant.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+        {/* Nav links */}
+        <nav className='flex-1 px-3 py-3 space-y-0.5'>
+          <NavItem href='/dashboard' label='Overview' Icon={LayoutDashboard} active={isActive('/dashboard')} onClick={() => setIsOpen(false)} />
+          <NavItem href='/dashboard/notifications' label='Notifications' Icon={Bell} active={isActive('/dashboard/notifications')} onClick={() => setIsOpen(false)} badge={notificationsCount} />
+          {currentTenant && (
+            <NavItem href={`/dashboard/tenant/${currentTenant.id}`} label='Projects' Icon={FolderKanban}
+              active={isTenantActive(currentTenant.id)} onClick={() => setIsOpen(false)} />
+          )}
+          {user?.isSuperAdmin && (
+            <NavItem href='/dashboard/admin' label='Admin Panel' Icon={ShieldAlert}
+              active={isActive('/dashboard/admin')} onClick={() => setIsOpen(false)} danger />
+          )}
+        </nav>
+
+        {/* User footer */}
+        <div className='px-3 pb-4 pt-2 space-y-1' style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          {user && (
+            <div className='px-2.5 py-2 mb-2 rounded-md' style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+              <p className='text-[10px] font-bold uppercase tracking-wider mb-0.5 field-label'>Signed in as</p>
+              <p className='text-xs font-semibold truncate' style={{ color: 'var(--foreground)' }}>{user.email}</p>
+              {user.isSuperAdmin && (
+                <span className='inline-flex items-center gap-1 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-sm'
+                  style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' }}>
+                  <ShieldAlert className='w-2.5 h-2.5' /> Super Admin
+                </span>
+              )}
             </div>
           )}
-
-          {/* Navigation Links */}
-          <nav className='flex-1 p-4 space-y-2'>
-            <Link
-              href='/dashboard'
-              onClick={() => setIsOpen(false)}
-              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                pathname === '/dashboard'
-                  ? 'bg-blue-50 text-blue-600 font-medium'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              Overview
-            </Link>
-
-            <Link
-              href='/dashboard/notifications'
-              onClick={() => setIsOpen(false)}
-              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                pathname === '/dashboard/notifications'
-                  ? 'bg-blue-50 text-blue-600 font-medium'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Bell className='w-4 h-4 mr-3' />
-              Notifications
-            </Link>
-
-            {currentTenant && (
-              <Link
-                href={`/dashboard/tenant/${currentTenant.id}`}
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  pathname.includes(currentTenant.id)
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Folder className='w-4 h-4 mr-3' />
-                Projects
-              </Link>
-            )}
-
-            {user?.isSuperAdmin && (
-              <Link
-                href='/dashboard/admin'
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  pathname === '/dashboard/admin'
-                    ? 'bg-red-50 text-red-600 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <span className='w-4 h-4 mr-3 inline-flex items-center justify-center font-bold text-xs bg-red-100 text-red-600 rounded'>
-                  A
-                </span>
-                Admin Panel
-              </Link>
-            )}
-
-            <div className='pt-4 mt-4 border-t'>
-              <Button
-                variant='outline'
-                className='w-full justify-start'
-                onClick={() => setIsOpen(false)}
-              >
-                <Plus className='w-4 h-4 mr-2' />
-                New Project
-              </Button>
-            </div>
-          </nav>
-
-          {/* User Menu */}
-          <div className='p-4 border-t space-y-2'>
-            {user && (
-              <div className='px-2 py-1 text-sm truncate'>
-                <p className='text-gray-500 text-xs'>Signed in as</p>
-                <p className='font-medium text-gray-900 truncate'>
-                  {user.email}
-                </p>
-              </div>
-            )}
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='outline' className='w-full justify-start'>
-                  <Settings className='w-4 h-4 mr-2' />
-                  Settings
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className='w-56'>
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Preferences</DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className='w-4 h-4 mr-2' />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <button onClick={handleLogout}
+            className='w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-left text-xs font-medium transition-colors'
+            style={{ color: 'var(--foreground-dim)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(220,38,38,0.08)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--foreground-dim)'; }}>
+            <LogOut className='w-3.5 h-3.5' />
+            Sign Out
+          </button>
         </div>
-      </div>
+      </aside>
 
       {/* Mobile overlay */}
       {isOpen && (
-        <div
-          className='fixed inset-0 bg-black/50 z-30 md:hidden'
-          onClick={() => setIsOpen(false)}
-        />
+        <div className='fixed inset-0 bg-black/70 z-30 md:hidden' onClick={() => setIsOpen(false)} />
       )}
     </>
+  );
+}
+
+function NavItem({ href, label, Icon, active, onClick, badge, danger }: {
+  href: string; label: string; Icon: any; active: boolean;
+  onClick?: () => void; badge?: number; danger?: boolean;
+}) {
+  return (
+    <Link href={href} onClick={onClick}
+      className='flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-xs font-medium transition-all'
+      style={{
+        background: active ? (danger ? 'rgba(239,68,68,0.08)' : 'var(--surface-3)') : 'transparent',
+        color: active ? (danger ? '#f87171' : 'var(--foreground)') : 'var(--foreground-muted)',
+        borderLeft: active ? `2px solid ${danger ? '#dc2626' : 'rgba(255,255,255,0.3)'}` : '2px solid transparent',
+      }}
+      onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)'; (e.currentTarget as HTMLElement).style.color = 'var(--foreground)'; } }}
+      onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--foreground-muted)'; } }}>
+      <Icon className='w-3.5 h-3.5 flex-shrink-0' />
+      <span className='flex-1'>{label}</span>
+      {badge ? (
+        <span className='text-[10px] font-bold px-1.5 py-0.5 rounded-full'
+          style={{ background: 'var(--surface-hover)', color: 'var(--foreground-muted)', border: '1px solid var(--border-strong)' }}>
+          {badge}
+        </span>
+      ) : null}
+    </Link>
   );
 }

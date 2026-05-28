@@ -22,6 +22,13 @@
       "when": 1779735374070,
       "tag": "0002_cuddly_hellion",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779912723306,
+      "tag": "0003_boring_praxagora",
+      "breakpoints": true
     }
   ]
 }

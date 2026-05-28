@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, verifyTenantAccess } from '@/lib/api-auth'
 import db, { projects, tasks, users, eq } from '@/lib/drizzle'
+import { createAuditLog } from '@/lib/audit'
+import { createNotification } from '@/lib/notification'
 
 /**
  * POST /api/tasks - Create a new task
@@ -10,9 +12,38 @@ export async function POST(request: NextRequest) {
     const authContext = await requireAuth()
     const body = await request.json()
 
-    const { projectId, title, description, status, priority, assignedToId, dueDate, parentTaskId } = body
+    const {
+      projectId,
+      title,
+      description,
+      status,
+      priority,
+      assignedToId,
+      dueDate,
+      startDate,
+      estimatedHours,
+      actualHours,
+      parentTaskId
+    } = body
 
-    if (!projectId || !title) {
+    let finalProjectId = projectId;
+    let finalAssignedToId = assignedToId || null;
+
+    if (parentTaskId) {
+      const parentTask = await db.query.tasks.findFirst({
+        where: eq(tasks.id, parentTaskId),
+      });
+      if (parentTask) {
+        if (!finalProjectId) {
+          finalProjectId = parentTask.projectId;
+        }
+        if (!finalAssignedToId) {
+          finalAssignedToId = parentTask.assignedToId;
+        }
+      }
+    }
+
+    if (!finalProjectId || !title) {
       return NextResponse.json(
         { error: 'Project ID and title are required' },
         { status: 400 }
@@ -20,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const project = await db.query.projects.findFirst({
-      where: eq(projects.id, projectId),
+      where: eq(projects.id, finalProjectId),
     })
 
     if (!project) {
@@ -36,19 +67,37 @@ export async function POST(request: NextRequest) {
       .insert(tasks)
       .values({
         id: crypto.randomUUID(),
-        projectId,
+        projectId: finalProjectId,
         title,
         description,
         status: status || 'todo',
         priority: priority || 'medium',
-        assignedToId: assignedToId || null,
+        assignedToId: finalAssignedToId,
         dueDate: dueDate ? new Date(dueDate) : null,
+        startDate: startDate ? new Date(startDate) : null,
+        estimatedHours: estimatedHours ? String(estimatedHours) : null,
+        actualHours: actualHours ? String(actualHours) : null,
         parentTaskId: parentTaskId || null,
         createdById: authContext.userId,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
       .returning()
+
+    // Trigger Audit Log
+    await createAuditLog(authContext.userId, 'task_created', {
+      taskId: task.id,
+      title: task.title,
+      projectId: task.projectId,
+    })
+
+    // Trigger Notification for Assignee
+    if (task.assignedToId) {
+      await createNotification(
+        task.assignedToId,
+        `You have been assigned a new task: "${task.title}" in project "${project.name}".`
+      )
+    }
 
     const assignedTo = assignedToId
       ? await db.query.users.findFirst({

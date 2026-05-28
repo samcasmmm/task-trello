@@ -15,6 +15,8 @@ import db, {
   asc,
   isNull,
 } from '@/lib/drizzle'
+import { createAuditLog } from '@/lib/audit'
+import { createNotification } from '@/lib/notification'
 
 /**
  * GET /api/tasks/[taskId] - Get task details with all relations
@@ -154,6 +156,7 @@ export async function GET(
     const subtaskRows = await db
       .select({
         id: tasks.id,
+        parentTaskId: tasks.parentTaskId,
         title: tasks.title,
         status: tasks.status,
         priority: tasks.priority,
@@ -177,6 +180,7 @@ export async function GET(
 
     const subtasks = subtaskRows.map((row) => ({
       id: row.id,
+      parent_task_id: row.parentTaskId,
       title: row.title,
       status: row.status,
       priority: row.priority,
@@ -231,6 +235,34 @@ export async function GET(
   }
 }
 
+async function propagateAssignee(parentTaskId: string, newAssigneeId: string | null) {
+  const subtasksList = await db.query.tasks.findMany({
+    where: and(
+      eq(tasks.parentTaskId, parentTaskId),
+      isNull(tasks.deletedAt)
+    )
+  });
+
+  if (subtasksList.length === 0) return;
+
+  await db
+    .update(tasks)
+    .set({
+      assignedToId: newAssigneeId,
+      updatedAt: new Date()
+    })
+    .where(
+      and(
+        eq(tasks.parentTaskId, parentTaskId),
+        isNull(tasks.deletedAt)
+      )
+    );
+
+  for (const sub of subtasksList) {
+    await propagateAssignee(sub.id, newAssigneeId);
+  }
+}
+
 /**
  * PATCH /api/tasks/[taskId] - Update task
  */
@@ -264,7 +296,17 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { title, description, status, priority, assignedToId, dueDate } = body
+    const {
+      title,
+      description,
+      status,
+      priority,
+      assignedToId,
+      dueDate,
+      startDate,
+      estimatedHours,
+      actualHours
+    } = body
 
     const [updated] = await db
       .update(tasks)
@@ -273,12 +315,60 @@ export async function PATCH(
         description,
         status,
         priority,
-        assignedToId: assignedToId || null,
-        dueDate: dueDate ? new Date(dueDate) : null,
+        assignedToId: assignedToId !== undefined ? (assignedToId || null) : undefined,
+        dueDate: dueDate !== undefined ? (dueDate ? new Date(dueDate) : null) : undefined,
+        startDate: startDate !== undefined ? (startDate ? new Date(startDate) : null) : undefined,
+        estimatedHours: estimatedHours !== undefined ? (estimatedHours ? String(estimatedHours) : null) : undefined,
+        actualHours: actualHours !== undefined ? (actualHours ? String(actualHours) : null) : undefined,
         updatedAt: new Date(),
       })
       .where(eq(tasks.id, taskId))
       .returning()
+
+    // Propagate assignee recursively to all subtasks if assignment changed
+    if (assignedToId !== undefined && (assignedToId || null) !== task.assignedToId) {
+      await propagateAssignee(taskId, assignedToId || null);
+    }
+
+    // Trigger Notification for new Assignment
+    if (assignedToId !== undefined && assignedToId !== task.assignedToId && assignedToId !== null) {
+      await createNotification(
+        assignedToId,
+        `You have been assigned to task: "${title || task.title}" in project "${project.name}".`
+      )
+    }
+
+    // Trigger Notification for task completion
+    if (status !== undefined && status === 'done' && task.status !== 'done') {
+      // notify creator
+      if (task.createdById && task.createdById !== authContext.userId) {
+        await createNotification(
+          task.createdById,
+          `Task completed: "${task.title}" has been completed.`
+        )
+      }
+      // notify assignee
+      if (task.assignedToId && task.assignedToId !== authContext.userId) {
+        await createNotification(
+          task.assignedToId,
+          `Task completed: "${task.title}" has been completed.`
+        )
+      }
+    }
+
+    // Trigger Audit Log
+    const changes: Record<string, any> = {}
+    if (title !== undefined && title !== task.title) changes.title = { old: task.title, new: title }
+    if (status !== undefined && status !== task.status) changes.status = { old: task.status, new: status }
+    if (assignedToId !== undefined && assignedToId !== task.assignedToId) changes.assignedToId = { old: task.assignedToId, new: assignedToId }
+    if (estimatedHours !== undefined && estimatedHours !== task.estimatedHours) changes.estimatedHours = { old: task.estimatedHours, new: estimatedHours }
+
+    await createAuditLog(authContext.userId, 'task_updated', {
+      taskId: task.id,
+      title: updated.title,
+      projectId: task.projectId,
+      changes,
+    })
 
     const assignedTo = updated.assignedToId
       ? await db.query.users.findFirst({
@@ -340,6 +430,13 @@ export async function DELETE(
       .update(tasks)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(eq(tasks.id, taskId))
+
+    // Trigger Audit Log
+    await createAuditLog(authContext.userId, 'task_deleted', {
+      taskId: task.id,
+      title: task.title,
+      projectId: task.projectId,
+    })
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

@@ -2,27 +2,41 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, CheckCircle } from 'lucide-react';
 import CreateTaskDialog from './create-task-dialog';
 import { formatDate } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '@/components/ui/select';
 
-const STATUS_COLORS: Record<string, string> = {
-  todo: 'bg-gray-100 text-gray-800',
-  in_progress: 'bg-blue-100 text-blue-800',
-  in_review: 'bg-purple-100 text-purple-800',
-  done: 'bg-green-100 text-green-800',
-  blocked: 'bg-red-100 text-red-800',
+const STATUS_STYLE: Record<
+  string,
+  { color: string; bg: string; label: string }
+> = {
+  todo: { color: '#777777', bg: 'rgba(100,100,100,0.12)', label: 'To Do' },
+  in_progress: {
+    color: '#aaaaaa',
+    bg: 'rgba(150,150,150,0.12)',
+    label: 'In Progress',
+  },
+  in_review: {
+    color: '#cccccc',
+    bg: 'rgba(180,180,180,0.1)',
+    label: 'In Review',
+  },
+  done: { color: '#6ee7b7', bg: 'rgba(110,231,183,0.1)', label: 'Done' },
+  blocked: { color: '#f87171', bg: 'rgba(248,113,113,0.1)', label: 'Blocked' },
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
-  low: 'bg-blue-100 text-blue-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-orange-100 text-orange-800',
-  urgent: 'bg-red-100 text-red-800',
+const PRIORITY_DOT: Record<string, string> = {
+  low: '#444444',
+  medium: '#d4a84b',
+  high: '#e08050',
+  urgent: '#e05555',
 };
 
 interface SubtaskProps {
@@ -34,84 +48,162 @@ interface SubtaskProps {
 function SubtaskItem({ task, level, onStatusChange }: SubtaskProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const hasSubtasks = task.children && task.children.length > 0;
+  const hasChildren = task.children && task.children.length > 0;
+  const statusStyle = STATUS_STYLE[task.status] || STATUS_STYLE.todo;
 
   const handleStatusChange = async (newStatus: string) => {
     setIsUpdating(true);
     try {
-      const response = await fetch(`/api/tasks/${task.id}`, {
+      const res = await fetch(`/api/tasks/${task.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (response.ok) {
-        onStatusChange?.(task.id, newStatus);
-      }
+      if (res.ok) onStatusChange?.(task.id, newStatus);
     } finally {
       setIsUpdating(false);
     }
   };
 
   return (
-    <div style={{ marginLeft: `${level * 1.5}rem` }} className='space-y-2'>
-      <div className='flex items-start gap-2 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors'>
-        {/* Expand button */}
-        {hasSubtasks ? (
+    <div style={{ marginLeft: `${level * 1.125}rem` }} className='space-y-1.5'>
+      <div
+        className='flex items-start gap-2 px-3 py-2.5 rounded-lg transition-colors'
+        style={{
+          background: 'var(--surface-2)',
+          border: '1px solid var(--border-subtle)',
+        }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.borderColor = 'var(--border-default)')
+        }
+        onMouseLeave={(e) =>
+          (e.currentTarget.style.borderColor = 'var(--border-subtle)')
+        }
+      >
+        {/* Expand toggle */}
+        {hasChildren ? (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className='flex-shrink-0 mt-1'
+            className='flex-shrink-0 mt-0.5 transition-colors'
+            style={{ color: 'var(--foreground-dim)' }}
           >
             {isExpanded ? (
-              <ChevronDown className='w-4 h-4 text-gray-600' />
+              <ChevronDown className='w-3.5 h-3.5' />
             ) : (
-              <ChevronRight className='w-4 h-4 text-gray-600' />
+              <ChevronRight className='w-3.5 h-3.5' />
             )}
           </button>
         ) : (
-          <div className='flex-shrink-0 w-4' />
+          <div className='flex-shrink-0 w-3.5 h-3.5 mt-0.5 flex items-center justify-center'>
+            <div
+              className='w-1 h-1 rounded-full'
+              style={{ background: 'var(--foreground-dim)' }}
+            />
+          </div>
         )}
 
-        {/* Subtask content */}
-        <Link href={`/dashboard/task/${task.id}`} className='flex-1 min-w-0'>
-          <div className='space-y-1'>
-            <h4 className='font-medium text-gray-900 text-sm hover:text-blue-600 truncate'>
-              {task.title}
-            </h4>
-            <div className='flex flex-wrap items-center gap-2'>
-              <Badge
-                variant='outline'
-                className={`text-xs capitalize ${STATUS_COLORS[task.status]}`}
+        <div className='flex-1 min-w-0'>
+          <Link
+            href={`/dashboard/task/${task.id}`}
+            className='text-xs font-medium block truncate transition-colors mb-1.5'
+            style={{ color: 'var(--foreground)' }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = 'var(--foreground-muted)')
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = 'var(--foreground)')
+            }
+          >
+            {task.title}
+          </Link>
+          <div className='flex items-center gap-2 flex-wrap'>
+            {/* Status select */}
+            <Select
+              value={task.status}
+              onValueChange={handleStatusChange}
+              disabled={isUpdating}
+            >
+              <SelectTrigger
+                className='h-5 border-none shadow-none p-0 gap-1 w-auto text-[10px] font-bold capitalize'
+                style={{ background: 'transparent', color: statusStyle.color }}
               >
-                {task.status.replace('_', ' ')}
-              </Badge>
-              <Badge
-                variant='outline'
-                className={`text-xs capitalize ${PRIORITY_COLORS[task.priority]}`}
+                <span
+                  className='px-1.5 py-0.5 rounded text-[10px] font-bold'
+                  style={{
+                    background: statusStyle.bg,
+                    color: statusStyle.color,
+                  }}
+                >
+                  {statusStyle.label}
+                </span>
+              </SelectTrigger>
+              <SelectContent
+                style={{
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border-default)',
+                }}
+                className='rounded-lg shadow-none'
+              >
+                {Object.entries(STATUS_STYLE).map(([key, val]) => (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    className='text-[11px] capitalize'
+                    style={{ color: val.color }}
+                  >
+                    {val.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Priority dot */}
+            <div className='flex items-center gap-1'>
+              <div
+                className='w-1.5 h-1.5 rounded-full flex-shrink-0'
+                style={{ background: PRIORITY_DOT[task.priority] || '#444' }}
+              />
+              <span
+                className='text-[10px] capitalize'
+                style={{ color: 'var(--foreground-dim)' }}
               >
                 {task.priority}
-              </Badge>
-              {task.due_date && (
-                <span className='text-xs text-gray-600'>
-                  {formatDate(task.due_date)}
-                </span>
-              )}
-              {task.assigned_to_user && (
-                <span className='text-xs text-gray-600'>
-                  @{task.assigned_to_user.fullName}
-                </span>
-              )}
+              </span>
             </div>
+
+            {task.due_date && (
+              <span
+                className='text-[10px] font-mono'
+                style={{ color: 'var(--foreground-dim)' }}
+              >
+                {formatDate(task.due_date)}
+              </span>
+            )}
+            {task.assignedTo && (
+              <span
+                className='text-[10px] font-medium px-1.5 py-0.5 rounded'
+                style={{
+                  background: 'var(--surface-3)',
+                  color: 'var(--foreground-dim)',
+                  border: '1px solid var(--border-subtle)',
+                }}
+              >
+                @{task.assignedTo.fullName}
+              </span>
+            )}
           </div>
-        </Link>
+        </div>
       </div>
 
-      {/* Subtasks */}
-      {isExpanded && hasSubtasks && (
-        <div className='space-y-2'>
-          {task.children.map((subtask: any) => (
+      {isExpanded && hasChildren && (
+        <div
+          className='space-y-1.5 pl-1'
+          style={{ borderLeft: '1px solid var(--border-subtle)' }}
+        >
+          {task.children.map((sub: any) => (
             <SubtaskItem
-              key={subtask.id}
-              task={subtask}
+              key={sub.id}
+              task={sub}
               level={level + 1}
               onStatusChange={onStatusChange}
             />
@@ -125,76 +217,133 @@ function SubtaskItem({ task, level, onStatusChange }: SubtaskProps) {
 export default function SubtasksSection({
   taskId,
   subtasks,
+  projectId,
+  onRefresh,
 }: {
   taskId: string;
   subtasks: any[];
+  projectId: string;
+  onRefresh?: () => void;
 }) {
-  const [tasks, setTasks] = useState(subtasks);
-
-  // Organize subtasks into a tree structure
-  const buildTaskTree = (flatTasks: any[]) => {
+  const buildTree = (flat: any[]) => {
     const map: Record<string, any> = {};
     const roots: any[] = [];
-
-    // Create map of all tasks
-    flatTasks.forEach((task) => {
-      map[task.id] = { ...task, children: [] };
+    flat.forEach((t) => (map[t.id] = { ...t, children: [] }));
+    flat.forEach((t) => {
+      const pid = t.parent_task_id || t.parentTaskId;
+      if (pid === taskId) roots.push(map[t.id]);
+      else if (pid && map[pid]) map[pid].children.push(map[t.id]);
     });
-
-    // Build tree
-    flatTasks.forEach((task) => {
-      if (task.parent_task_id === taskId) {
-        roots.push(map[task.id]);
-      } else if (task.parent_task_id && map[task.parent_task_id]) {
-        map[task.parent_task_id].children.push(map[task.id]);
-      }
-    });
-
     return roots;
   };
 
-  const rootSubtasks = buildTaskTree(tasks);
-  const completedCount = tasks.filter((t) => t.status === 'done').length;
-
-  if (tasks.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className='text-base'>Subtasks</CardTitle>
-        </CardHeader>
-        <CardContent className='text-center py-6'>
-          <p className='text-gray-600 text-sm mb-4'>No subtasks yet</p>
-          <CreateTaskDialog projectId={''} parentTaskId={taskId}>
-            <Button size='sm' variant='outline'>
-              <Plus className='w-4 h-4 mr-2' />
-              Add Subtask
-            </Button>
-          </CreateTaskDialog>
-        </CardContent>
-      </Card>
-    );
-  }
+  const rootSubtasks = buildTree(subtasks);
+  const completedCount = subtasks.filter((t) => t.status === 'done').length;
+  const progress =
+    subtasks.length > 0
+      ? Math.round((completedCount / subtasks.length) * 100)
+      : 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className='flex items-center justify-between'>
-          <CardTitle className='text-base'>
-            Subtasks ({completedCount}/{tasks.length})
-          </CardTitle>
-          <CreateTaskDialog projectId={''} parentTaskId={taskId}>
-            <Button size='sm' variant='outline'>
-              <Plus className='w-4 h-4 mr-2' />
-              Add
-            </Button>
-          </CreateTaskDialog>
+    <div
+      className='rounded-xl overflow-hidden'
+      style={{
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border-subtle)',
+      }}
+    >
+      {/* Header */}
+      <div
+        className='flex items-center justify-between px-4 py-3'
+        style={{
+          borderBottom: '1px solid var(--border-subtle)',
+          background: 'var(--surface-1)',
+        }}
+      >
+        <div className='flex items-center gap-3'>
+          <span
+            className='text-xs font-bold'
+            style={{ color: 'var(--foreground)' }}
+          >
+            Subtasks
+          </span>
+          {subtasks.length > 0 && (
+            <span
+              className='text-[10px] font-semibold px-2 py-0.5 rounded-full'
+              style={{
+                background: 'var(--surface-3)',
+                color: 'var(--foreground-dim)',
+                border: '1px solid var(--border-default)',
+              }}
+            >
+              {completedCount}/{subtasks.length}
+            </span>
+          )}
         </div>
-      </CardHeader>
-      <CardContent className='space-y-2'>
-        {rootSubtasks.map((subtask) => (
-          <SubtaskItem key={subtask.id} task={subtask} level={0} />
-        ))}
-      </CardContent>
-    </Card>
+        <CreateTaskDialog
+          projectId={projectId}
+          parentTaskId={taskId}
+          onSuccess={onRefresh}
+        >
+          <Button
+            size='sm'
+            className='text-[11px] h-7 px-2.5 rounded-md font-semibold btn-ghost'
+          >
+            <Plus className='w-3 h-3 mr-1' />
+            Add
+          </Button>
+        </CreateTaskDialog>
+      </div>
+
+      <div className='p-3'>
+        {/* Progress bar */}
+        {subtasks.length > 0 && (
+          <div className='flex items-center gap-2.5 mb-3'>
+            <div
+              className='flex-1 h-1 rounded-full overflow-hidden'
+              style={{ background: 'var(--surface-3)' }}
+            >
+              <div
+                className='h-full rounded-full transition-all duration-500'
+                style={{
+                  width: `${progress}%`,
+                  background:
+                    progress === 100 ? '#6ee7b7' : 'rgba(255,255,255,0.25)',
+                }}
+              />
+            </div>
+            <span
+              className='text-[10px] font-semibold flex-shrink-0'
+              style={{ color: 'var(--foreground-dim)' }}
+            >
+              {progress}%
+            </span>
+          </div>
+        )}
+
+        {subtasks.length === 0 ? (
+          <div className='text-center py-6'>
+            <CheckCircle
+              className='w-7 h-7 mx-auto mb-2'
+              style={{ color: 'var(--foreground-dim)' }}
+            />
+            <p className='text-xs' style={{ color: 'var(--foreground-dim)' }}>
+              No subtasks yet
+            </p>
+          </div>
+        ) : (
+          <div className='space-y-1.5'>
+            {rootSubtasks.map((sub) => (
+              <SubtaskItem
+                key={sub.id}
+                task={sub}
+                level={0}
+                onStatusChange={() => onRefresh?.()}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

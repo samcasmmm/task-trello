@@ -4,13 +4,6 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
   Plus,
   Settings,
   FolderKanban,
@@ -20,6 +13,7 @@ import {
   UserCheck,
   TrendingUp,
   Activity,
+  ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import CreateProjectDialog from '@/components/create-project-dialog';
@@ -35,8 +29,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
 } from 'recharts';
 
 interface TenantData {
@@ -45,14 +37,12 @@ interface TenantData {
   description: string | null;
   members: any[];
 }
-
 interface Project {
   id: string;
   name: string;
   description: string | null;
   color: string;
 }
-
 interface StatsData {
   totalProjects: number;
   totalTasks: number;
@@ -61,24 +51,65 @@ interface StatsData {
   completedTasks: number;
   activeMembers: number;
   tasksByStatus: { status: string; count: number }[];
-  tasksByPriority: { priority: string; count: number }[];
   completionTrend: { name: string; completed: number; created: number }[];
   recentActivities: any[];
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  todo: '#94A3B8', // slate
-  in_progress: '#3B82F6', // blue
-  in_review: '#8B5CF6', // purple
-  done: '#10B981', // green
-  blocked: '#EF4444', // red
+const STATUS_PIE_COLORS: Record<string, string> = {
+  todo: '#444444',
+  in_progress: '#888888',
+  in_review: '#bbbbbb',
+  done: '#6ee7b7',
+  blocked: '#f87171',
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
-  low: '#3B82F6', // blue
-  medium: '#F59E0B', // amber
-  high: '#F97316', // orange
-  urgent: '#EF4444', // red
+const KPI = [
+  {
+    key: 'totalProjects',
+    label: 'Projects',
+    Icon: FolderKanban,
+    lineColor: '#555555',
+  },
+  {
+    key: 'totalTasks',
+    label: 'Tasks',
+    Icon: CheckSquare,
+    lineColor: '#666666',
+  },
+  {
+    key: 'tasksDueToday',
+    label: 'Due Today',
+    Icon: Clock,
+    lineColor: '#888888',
+  },
+  {
+    key: 'overdueTasks',
+    label: 'Overdue',
+    Icon: AlertTriangle,
+    lineColor: '#e05555',
+    danger: true,
+  },
+  {
+    key: 'completedTasks',
+    label: 'Completed',
+    Icon: CheckSquare,
+    lineColor: '#6ee7b7',
+  },
+  {
+    key: 'activeMembers',
+    label: 'Members',
+    Icon: UserCheck,
+    lineColor: '#aaaaaa',
+  },
+];
+
+const tooltipStyle = {
+  backgroundColor: '#111111',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '0.375rem',
+  color: '#aaaaaa',
+  fontSize: '11px',
+  boxShadow: 'none',
 };
 
 export default function TenantPage() {
@@ -96,32 +127,13 @@ export default function TenantPage() {
         fetch(`/api/tenants/${tenantId}/projects`),
         fetch(`/api/tenants/${tenantId}/stats`),
       ]);
-
-      if (!tenantRes.ok || !projectsRes.ok || !statsRes.ok) {
-        const errorDetails = {
-          tenant: tenantRes.ok
-            ? null
-            : `${tenantRes.status} ${await tenantRes.text()}`,
-          projects: projectsRes.ok
-            ? null
-            : `${projectsRes.status} ${await projectsRes.text()}`,
-          stats: statsRes.ok
-            ? null
-            : `${statsRes.status} ${await statsRes.text()}`,
-        };
-        console.error('Tenant data fetch failed', errorDetails);
-        throw new Error('Failed to fetch data');
-      }
-
-      const tenantData = await tenantRes.json();
-      const projectsData = await projectsRes.json();
-      const statsData = await statsRes.json();
-
-      setTenant(tenantData);
-      setProjects(projectsData);
-      setStats(statsData);
-    } catch (error) {
-      console.error('Error fetching tenant data:', error);
+      if (!tenantRes.ok || !projectsRes.ok || !statsRes.ok)
+        throw new Error('Failed');
+      setTenant(await tenantRes.json());
+      setProjects(await projectsRes.json());
+      setStats(await statsRes.json());
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -130,416 +142,494 @@ export default function TenantPage() {
   useEffect(() => {
     fetchData();
   }, [tenantId]);
-
-  const onProjectCreated = (newProject: Project) => {
-    setProjects([...projects, newProject]);
-    fetchData(); // Refresh stats
+  const onProjectCreated = (p: Project) => {
+    setProjects((prev) => [...prev, p]);
+    fetchData();
   };
 
   if (loading) {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-center'>
-          <div className='inline-flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white mb-4'>
-            <div className='h-6 w-6 animate-spin rounded-full border-2 border-gray-900 border-t-transparent' />
-          </div>
-          <p className='text-sm text-muted-foreground'>
-            Loading workspace dashboard...
+      <div className='flex items-center justify-center h-[60vh]'>
+        <div className='flex flex-col items-center gap-3'>
+          <div className='w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin' />
+          <p className='text-[11px]' style={{ color: 'var(--foreground-dim)' }}>
+            Loading workspace...
           </p>
         </div>
       </div>
     );
   }
 
-  if (!tenant) {
+  if (!tenant)
     return (
-      <div className='text-center py-12'>
-        <h1 className='text-2xl font-bold text-gray-900'>
-          Workspace not found
-        </h1>
+      <div
+        className='text-center py-20 text-sm'
+        style={{ color: 'var(--foreground-muted)' }}
+      >
+        Workspace not found
       </div>
     );
-  }
 
-  // Format Status Chart Data
   const statusChartData =
     stats?.tasksByStatus.map((s) => ({
-      name: s.status.replace('_', ' ').toUpperCase(),
+      name: s.status.replace('_', ' '),
       value: s.count,
-      color: STATUS_COLORS[s.status] || '#94A3B8',
-    })) || [];
-
-  // Format Priority Chart Data
-  const priorityChartData =
-    stats?.tasksByPriority.map((p) => ({
-      name: p.priority.toUpperCase(),
-      value: p.count,
-      color: PRIORITY_COLORS[p.priority] || '#3B82F6',
+      color: STATUS_PIE_COLORS[s.status] || '#555',
     })) || [];
 
   return (
-    <div className='space-y-8'>
+    <div className='space-y-7'>
       {/* Header */}
-      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5'>
+      <div
+        className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5'
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}
+      >
         <div>
-          <h1 className='text-3xl font-bold text-gray-900 tracking-tight'>
-            {tenant.name} Workspace
+          <h1
+            className='text-xl font-extrabold tracking-tight'
+            style={{ color: 'var(--foreground)' }}
+          >
+            {tenant.name}
           </h1>
           {tenant.description && (
-            <p className='mt-1 text-gray-600 max-w-2xl'>{tenant.description}</p>
+            <p
+              className='text-xs mt-1 max-w-xl'
+              style={{ color: 'var(--foreground-muted)' }}
+            >
+              {tenant.description}
+            </p>
           )}
         </div>
         <div className='flex items-center gap-2'>
           <Link href={`/dashboard/tenant/${tenantId}/settings`}>
-            <Button variant='outline' size='sm'>
-              <Settings className='w-4 h-4 mr-2' />
-              Workspace Settings
+            <Button size='sm' className='btn-ghost text-xs h-8 px-3 rounded-md'>
+              <Settings className='w-3.5 h-3.5 mr-1.5' />
+              Settings
             </Button>
           </Link>
           <CreateProjectDialog tenantId={tenantId} onSuccess={onProjectCreated}>
-            <Button size='sm'>
-              <Plus className='w-4 h-4 mr-2' />
+            <Button
+              size='sm'
+              className='btn-primary text-xs h-8 px-3 rounded-md'
+            >
+              <Plus className='w-3.5 h-3.5 mr-1.5' />
               New Project
             </Button>
           </CreateProjectDialog>
         </div>
       </div>
 
-      {/* KPI Widgets Grid */}
+      {/* KPI Cards */}
       {stats && (
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-6'>
-          <Card className='hover:shadow-md transition-shadow relative overflow-hidden'>
-            <div className='absolute top-0 left-0 w-1 h-full bg-blue-500' />
-            <CardHeader className='pb-2 flex flex-row items-center justify-between space-y-0'>
-              <CardTitle className='text-xs font-semibold text-gray-500 uppercase'>
-                Total Projects
-              </CardTitle>
-              <FolderKanban className='w-4 h-4 text-blue-500' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold text-gray-900'>
-                {stats.totalProjects}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className='hover:shadow-md transition-shadow relative overflow-hidden'>
-            <div className='absolute top-0 left-0 w-1 h-full bg-slate-400' />
-            <CardHeader className='pb-2 flex flex-row items-center justify-between space-y-0'>
-              <CardTitle className='text-xs font-semibold text-gray-500 uppercase'>
-                Total Tasks
-              </CardTitle>
-              <CheckSquare className='w-4 h-4 text-slate-500' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold text-gray-900'>
-                {stats.totalTasks}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className='hover:shadow-md transition-shadow relative overflow-hidden'>
-            <div className='absolute top-0 left-0 w-1 h-full bg-purple-500' />
-            <CardHeader className='pb-2 flex flex-row items-center justify-between space-y-0'>
-              <CardTitle className='text-xs font-semibold text-gray-500 uppercase'>
-                Due Today
-              </CardTitle>
-              <Clock className='w-4 h-4 text-purple-500' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold text-gray-900'>
-                {stats.tasksDueToday}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`hover:shadow-md transition-shadow relative overflow-hidden`}
-          >
-            <div
-              className={`absolute top-0 left-0 w-1 h-full ${stats.overdueTasks > 0 ? 'bg-red-500' : 'bg-green-500'}`}
-            />
-            <CardHeader className='pb-2 flex flex-row items-center justify-between space-y-0'>
-              <CardTitle className='text-xs font-semibold text-gray-500 uppercase'>
-                Overdue Tasks
-              </CardTitle>
-              <AlertTriangle
-                className={`w-4 h-4 ${stats.overdueTasks > 0 ? 'text-red-500 animate-pulse' : 'text-green-500'}`}
-              />
-            </CardHeader>
-            <CardContent>
+        <div className='grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'>
+          {KPI.map(({ key, label, Icon, lineColor, danger }) => {
+            const val = (stats as any)[key] as number;
+            const isDanger = danger && val > 0;
+            return (
               <div
-                className={`text-2xl font-bold ${stats.overdueTasks > 0 ? 'text-red-600' : 'text-gray-900'}`}
+                key={key}
+                className='relative overflow-hidden rounded-xl'
+                style={{
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border-subtle)',
+                }}
               >
-                {stats.overdueTasks}
+                <div
+                  className='absolute left-0 top-0 w-px h-full'
+                  style={{ background: isDanger ? '#e05555' : lineColor }}
+                />
+                <div className='p-4 pl-5'>
+                  <div className='flex items-center justify-between mb-2.5'>
+                    <p className='field-label'>{label}</p>
+                    <Icon
+                      className='w-3.5 h-3.5 flex-shrink-0'
+                      style={{
+                        color: isDanger ? '#e05555' : 'var(--foreground-dim)',
+                      }}
+                    />
+                  </div>
+                  <p
+                    className='text-2xl font-black tracking-tight'
+                    style={{
+                      color: isDanger ? '#f87171' : 'var(--foreground)',
+                    }}
+                  >
+                    {val}
+                  </p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className='hover:shadow-md transition-shadow relative overflow-hidden'>
-            <div className='absolute top-0 left-0 w-1 h-full bg-green-500' />
-            <CardHeader className='pb-2 flex flex-row items-center justify-between space-y-0'>
-              <CardTitle className='text-xs font-semibold text-gray-500 uppercase'>
-                Completed Tasks
-              </CardTitle>
-              <CheckSquare className='w-4 h-4 text-green-500' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold text-gray-900'>
-                {stats.completedTasks}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className='hover:shadow-md transition-shadow relative overflow-hidden'>
-            <div className='absolute top-0 left-0 w-1 h-full bg-orange-500' />
-            <CardHeader className='pb-2 flex flex-row items-center justify-between space-y-0'>
-              <CardTitle className='text-xs font-semibold text-gray-500 uppercase'>
-                Active Team
-              </CardTitle>
-              <UserCheck className='w-4 h-4 text-orange-500' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold text-gray-900'>
-                {stats.activeMembers}
-              </div>
-            </CardContent>
-          </Card>
+            );
+          })}
         </div>
       )}
 
-      {/* Visual Analytics Charts */}
+      {/* Charts */}
       {stats && stats.totalTasks > 0 && (
-        <div className='grid gap-6 md:grid-cols-12'>
-          {/* Chart 1: Task Completion Trend */}
-          <Card className='md:col-span-7'>
-            <CardHeader className='pb-2 border-b mb-4'>
-              <CardTitle className='text-base font-semibold flex items-center gap-2'>
-                <TrendingUp className='w-5 h-5 text-blue-500' />
+        <div className='grid gap-4 md:grid-cols-12'>
+          {/* Line chart */}
+          <div
+            className='md:col-span-7 rounded-xl overflow-hidden'
+            style={{
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div
+              className='flex items-center gap-2 px-4 py-3'
+              style={{
+                borderBottom: '1px solid var(--border-subtle)',
+                background: 'var(--surface-1)',
+              }}
+            >
+              <TrendingUp
+                className='w-3.5 h-3.5'
+                style={{ color: 'var(--foreground-dim)' }}
+              />
+              <span
+                className='text-xs font-bold'
+                style={{ color: 'var(--foreground)' }}
+              >
                 Task Productivity Trend
-              </CardTitle>
-              <CardDescription>
-                Daily comparison of tasks created vs. successfully marked Done
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='h-72 w-full'>
+              </span>
+            </div>
+            <div className='p-4'>
+              <div className='h-56 w-full'>
                 <ResponsiveContainer width='100%' height='100%'>
                   <LineChart data={stats.completionTrend}>
-                    <CartesianGrid strokeDasharray='3 3' vertical={false} />
+                    <CartesianGrid
+                      strokeDasharray='2 4'
+                      vertical={false}
+                      stroke='rgba(255,255,255,0.04)'
+                    />
                     <XAxis
                       dataKey='name'
-                      stroke='#888888'
-                      fontSize={11}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      stroke='#888888'
-                      fontSize={11}
+                      stroke='#444'
+                      fontSize={10}
                       tickLine={false}
                       axisLine={false}
                     />
-                    <RechartsTooltip />
-                    <Legend verticalAlign='top' height={36} iconType='circle' />
+                    <YAxis
+                      stroke='#444'
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <RechartsTooltip
+                      contentStyle={tooltipStyle}
+                      itemStyle={{ color: '#aaa' }}
+                      labelStyle={{ color: '#777', fontWeight: 700 }}
+                    />
+                    <Legend
+                      verticalAlign='top'
+                      height={28}
+                      iconType='circle'
+                      wrapperStyle={{ fontSize: '10px', color: '#666' }}
+                    />
                     <Line
                       type='monotone'
                       dataKey='created'
-                      name='New Tasks'
-                      stroke='#3B82F6'
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
+                      name='Created'
+                      stroke='#555'
+                      strokeWidth={1.5}
+                      dot={false}
                     />
                     <Line
                       type='monotone'
                       dataKey='completed'
-                      name='Tasks Completed'
-                      stroke='#10B981'
-                      strokeWidth={2}
+                      name='Completed'
+                      stroke='#6ee7b7'
+                      strokeWidth={1.5}
+                      dot={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Chart 2: Tasks by Status */}
-          <Card className='md:col-span-5'>
-            <CardHeader className='pb-2 border-b mb-4'>
-              <CardTitle className='text-base font-semibold flex items-center gap-2'>
-                <Activity className='w-5 h-5 text-purple-500' />
+          {/* Pie chart */}
+          <div
+            className='md:col-span-5 rounded-xl overflow-hidden'
+            style={{
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div
+              className='flex items-center gap-2 px-4 py-3'
+              style={{
+                borderBottom: '1px solid var(--border-subtle)',
+                background: 'var(--surface-1)',
+              }}
+            >
+              <Activity
+                className='w-3.5 h-3.5'
+                style={{ color: 'var(--foreground-dim)' }}
+              />
+              <span
+                className='text-xs font-bold'
+                style={{ color: 'var(--foreground)' }}
+              >
                 Task Distribution
-              </CardTitle>
-              <CardDescription>
-                Visual breakdown by status and system priority
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-6'>
-              {/* Status Pie Chart */}
+              </span>
+            </div>
+            <div className='p-4'>
               {statusChartData.length > 0 && (
-                <div>
-                  <div className='text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider text-center'>
-                    Tasks by Status
-                  </div>
-                  <div className='h-44 w-full relative'>
+                <>
+                  <div className='h-40 w-full relative'>
                     <ResponsiveContainer width='100%' height='100%'>
                       <PieChart>
                         <Pie
                           data={statusChartData}
-                          innerRadius={45}
-                          outerRadius={65}
+                          innerRadius={40}
+                          outerRadius={58}
                           paddingAngle={3}
                           dataKey='value'
                         >
-                          {statusChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          {statusChartData.map((e, i) => (
+                            <Cell key={i} fill={e.color} />
                           ))}
                         </Pie>
-                        <RechartsTooltip />
+                        <RechartsTooltip
+                          contentStyle={tooltipStyle}
+                          itemStyle={{ color: '#aaa' }}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
-                      <span className='text-lg font-bold text-gray-900'>
+                      <span
+                        className='text-xl font-black'
+                        style={{ color: 'var(--foreground)' }}
+                      >
                         {stats.totalTasks}
                       </span>
-                      <span className='text-[10px] text-gray-400 uppercase font-semibold'>
-                        Total
-                      </span>
+                      <span className='field-label'>Total</span>
                     </div>
                   </div>
-                  {/* Custom Legend */}
-                  <div className='flex flex-wrap justify-center gap-3 mt-2 text-xs'>
-                    {statusChartData.map((item, idx) => (
-                      <div key={idx} className='flex items-center gap-1'>
-                        <span
-                          className='w-2.5 h-2.5 rounded-full'
-                          style={{ backgroundColor: item.color }}
+                  <div className='flex flex-wrap justify-center gap-x-3 gap-y-1.5 mt-2'>
+                    {statusChartData.map((item, i) => (
+                      <div key={i} className='flex items-center gap-1'>
+                        <div
+                          className='w-1.5 h-1.5 rounded-sm'
+                          style={{ background: item.color }}
                         />
-                        <span className='text-gray-600 capitalize font-medium'>
-                          {item.name.toLowerCase()} ({item.value})
+                        <span
+                          className='text-[10px] font-medium capitalize'
+                          style={{ color: 'var(--foreground-dim)' }}
+                        >
+                          {item.name} ({item.value})
                         </span>
                       </div>
                     ))}
                   </div>
-                </div>
+                </>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Projects Directory & Activity Timeline Split */}
-      <div className='grid gap-6 md:grid-cols-12'>
-        {/* Left Column: Projects */}
-        <div className='md:col-span-8 space-y-4'>
-          <div className='flex items-center justify-between border-b pb-2'>
-            <h2 className='text-xl font-bold text-gray-900 flex items-center gap-2'>
-              <FolderKanban className='w-5 h-5 text-gray-600' />
-              Workspace Projects
+      {/* Projects + Activity */}
+      <div className='grid gap-4 md:grid-cols-12'>
+        {/* Projects */}
+        <div className='md:col-span-8 space-y-3'>
+          <div
+            className='flex items-center justify-between pb-2'
+            style={{ borderBottom: '1px solid var(--border-subtle)' }}
+          >
+            <h2 className='section-heading flex items-center gap-2'>
+              <FolderKanban className='w-3.5 h-3.5' />
+              Projects
             </h2>
             <CreateProjectDialog
               tenantId={tenantId}
               onSuccess={onProjectCreated}
             >
-              <Button size='sm' variant='outline'>
-                <Plus className='w-4 h-4 mr-2' />
-                Add Project
+              <Button
+                size='sm'
+                className='btn-ghost text-[11px] h-7 px-2.5 rounded-md'
+              >
+                <Plus className='w-3 h-3 mr-1' />
+                Add
               </Button>
             </CreateProjectDialog>
           </div>
 
-          {projects && projects.length > 0 ? (
-            <div className='grid gap-4 sm:grid-cols-2'>
+          {projects.length > 0 ? (
+            <div className='grid gap-3 sm:grid-cols-2'>
               {projects.map((project) => (
                 <Link
                   key={project.id}
                   href={`/dashboard/project/${project.id}`}
-                  className='group'
+                  className='group block'
                 >
-                  <Card className='hover:shadow-md hover:border-gray-300 transition-all cursor-pointer h-full relative overflow-hidden bg-white'>
-                    <div
-                      className='absolute top-0 left-0 w-full h-1'
-                      style={{ backgroundColor: project.color }}
-                    />
-                    <CardHeader className='pb-2'>
-                      <CardTitle className='text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors'>
+                  <div
+                    className='relative overflow-hidden rounded-xl transition-all duration-200 hover:-translate-y-0.5'
+                    style={{
+                      background: 'var(--surface-2)',
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.borderColor =
+                        'var(--border-strong)')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.borderColor =
+                        'var(--border-subtle)')
+                    }
+                  >
+                    <div className='p-4'>
+                      <div className='flex items-start justify-between gap-3 mb-3'>
+                        <div
+                          className='w-9 h-9 rounded-lg flex items-center justify-center text-sm font-extrabold flex-shrink-0'
+                          style={{
+                            background: project.color
+                              ? `${project.color}22`
+                              : 'var(--surface-3)',
+                            border: `1px solid ${project.color || 'var(--border-strong)'}40`,
+                            color: project.color || 'var(--foreground-muted)',
+                          }}
+                        >
+                          {project.name.charAt(0).toUpperCase()}
+                        </div>
+                        <ArrowRight
+                          className='w-4 h-4 mt-1 opacity-0 group-hover:opacity-100 transition-opacity'
+                          style={{ color: 'var(--foreground-dim)' }}
+                        />
+                      </div>
+                      <h3
+                        className='text-sm font-bold mb-1'
+                        style={{ color: 'var(--foreground)' }}
+                      >
                         {project.name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className='text-sm text-gray-600 line-clamp-3'>
+                      </h3>
+                      <p
+                        className='text-xs line-clamp-2 mb-4 leading-relaxed'
+                        style={{ color: 'var(--foreground-muted)' }}
+                      >
                         {project.description || 'No description provided.'}
                       </p>
-                    </CardContent>
-                  </Card>
+                      <div
+                        className='flex items-center gap-4 pt-3'
+                        style={{ borderTop: '1px solid var(--border-subtle)' }}
+                      >
+                        <div
+                          className='flex items-center gap-1.5 text-[10px] font-semibold'
+                          style={{ color: 'var(--foreground-dim)' }}
+                        >
+                          <CheckSquare className='w-3 h-3' />
+                          View tasks
+                        </div>
+                        <div
+                          className='flex items-center gap-1.5 text-[10px] font-semibold'
+                          style={{
+                            color: project.color || 'var(--foreground-dim)',
+                          }}
+                        >
+                          <div
+                            className='w-1.5 h-1.5 rounded-full'
+                            style={{
+                              background:
+                                project.color || 'var(--border-strong)',
+                            }}
+                          />
+                          Active
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </Link>
               ))}
             </div>
           ) : (
-            <Card className='bg-gray-50/50 border-dashed py-12'>
-              <CardContent className='text-center'>
-                <FolderKanban className='w-12 h-12 mx-auto text-gray-300 mb-4' />
-                <h3 className='text-lg font-bold text-gray-900 mb-1'>
-                  No active projects
-                </h3>
-                <p className='text-gray-500 mb-4 text-sm'>
-                  Create a new project workspace to begin managing tasks.
-                </p>
-                <CreateProjectDialog
-                  tenantId={tenantId}
-                  onSuccess={onProjectCreated}
+            <div
+              className='rounded-xl py-12 text-center'
+              style={{
+                background: 'var(--surface-2)',
+                border: '1px dashed var(--border-default)',
+              }}
+            >
+              <FolderKanban
+                className='w-8 h-8 mx-auto mb-3'
+                style={{ color: 'var(--foreground-dim)' }}
+              />
+              <h3
+                className='text-sm font-bold mb-1'
+                style={{ color: 'var(--foreground)' }}
+              >
+                No active projects
+              </h3>
+              <p
+                className='text-xs mb-4'
+                style={{ color: 'var(--foreground-muted)' }}
+              >
+                Create a new project to begin managing tasks.
+              </p>
+              <CreateProjectDialog
+                tenantId={tenantId}
+                onSuccess={onProjectCreated}
+              >
+                <Button
+                  size='sm'
+                  className='btn-primary text-xs h-8 px-4 rounded-md'
                 >
-                  <Button>
-                    <Plus className='w-4 h-4 mr-2' />
-                    Create First Project
-                  </Button>
-                </CreateProjectDialog>
-              </CardContent>
-            </Card>
+                  <Plus className='w-3.5 h-3.5 mr-1.5' />
+                  Create First Project
+                </Button>
+              </CreateProjectDialog>
+            </div>
           )}
         </div>
 
-        {/* Right Column: Recent Activity Feed */}
-        <div className='md:col-span-4 space-y-4'>
-          <div className='border-b pb-2'>
-            <h2 className='text-xl font-bold text-gray-900 flex items-center gap-2'>
-              <Activity className='w-5 h-5 text-gray-600' />
-              Workspace Activity
+        {/* Activity */}
+        <div className='md:col-span-4 space-y-3'>
+          <div
+            className='pb-2'
+            style={{ borderBottom: '1px solid var(--border-subtle)' }}
+          >
+            <h2 className='section-heading flex items-center gap-2'>
+              <Activity className='w-3.5 h-3.5' />
+              Activity Feed
             </h2>
           </div>
-
-          <Card>
-            <CardHeader className='pb-3'>
-              <CardTitle className='text-sm font-semibold'>
-                Audit Stream
-              </CardTitle>
-              <CardDescription>
-                Live events recorded within the workspace team
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div
+            className='rounded-xl overflow-hidden'
+            style={{
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div className='p-3.5'>
               {stats && stats.recentActivities.length > 0 ? (
-                <div className='space-y-4'>
+                <div className='space-y-3.5 max-h-72 overflow-y-auto pr-1'>
                   {stats.recentActivities.map((act) => (
                     <div
                       key={act.id}
-                      className='text-xs flex gap-3 items-start'
+                      className='flex items-start gap-2.5 text-xs'
                     >
-                      <div className='mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-blue-500' />
-                      <div className='space-y-1'>
-                        <p className='font-medium text-gray-800'>
-                          <span className='font-semibold text-gray-900'>
+                      <div
+                        className='w-1 h-1 rounded-full flex-shrink-0 mt-1.5'
+                        style={{ background: 'var(--foreground-dim)' }}
+                      />
+                      <div className='space-y-0.5 min-w-0'>
+                        <p style={{ color: 'var(--foreground-muted)' }}>
+                          <span
+                            className='font-semibold'
+                            style={{ color: 'var(--foreground)' }}
+                          >
                             {act.userFullName || 'System'}
                           </span>{' '}
-                          <span className='text-blue-600 font-mono text-[10px] uppercase font-bold'>
+                          <span
+                            className='uppercase text-[10px] font-mono font-bold'
+                            style={{ color: 'var(--foreground-dim)' }}
+                          >
                             {act.action.replace(/_/g, ' ')}
                           </span>
                         </p>
-                        {act.metadata && (
-                          <p className='text-[10px] text-gray-500 font-mono bg-gray-50 p-1.5 rounded truncate max-w-[250px]'>
-                            {JSON.stringify(act.metadata)}
-                          </p>
-                        )}
-                        <p className='text-[10px] text-gray-400'>
+                        <p
+                          className='text-[10px] font-mono'
+                          style={{ color: 'var(--foreground-dim)' }}
+                        >
                           {new Date(act.createdAt).toLocaleString()}
                         </p>
                       </div>
@@ -547,12 +637,15 @@ export default function TenantPage() {
                   ))}
                 </div>
               ) : (
-                <div className='text-center py-8 text-xs text-gray-500'>
-                  No recent activities recorded in this workspace.
+                <div
+                  className='text-center py-8 text-xs'
+                  style={{ color: 'var(--foreground-dim)' }}
+                >
+                  No recent activity.
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
