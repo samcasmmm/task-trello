@@ -272,41 +272,38 @@ export default function TaskDetailView({
       : null;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      {/* Main Content Area */}
-      <div className="lg:col-span-2 space-y-6">
-        {/* Task Details Panel */}
-        <Card className="rounded-lg overflow-hidden bg-card border-border-subtle border">
-          <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                {editing ? (
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="text-xl font-bold focus-visible:ring-slate-700 h-10 rounded-sm bg-surface-3 border-border-strong text-foreground border"
-                  />
-                ) : (
-                  <h1 className="text-xl font-bold tracking-tight text-foreground">
-                    {activeTask.title}
-                  </h1>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-sm"
-                onClick={() => setEditing(!editing)}
-              >
-                {editing ? (
-                  <X className="w-4 h-4 text-slate-400" />
-                ) : (
-                  <Pencil className="w-4 h-4 text-slate-400" />
-                )}
-              </Button>
+    <div className="grid gap-6 lg:grid-cols-3 pb-6">
+      <div className="lg:col-span-2 space-y-3">
+        <Card className="rounded-xl overflow-hidden p-0 border border-border-subtle shadow-none">
+          <CardHeader className="border-b bg-surface-1 border-border-subtle flex flex-row items-center justify-between gap-4 w-full py-4">
+            <div className="flex-1 min-w-0">
+              {editing ? (
+                <Input
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="text-xl font-bold h-10 rounded-md bg-surface-3 border border-border-strong text-foreground focus-visible:ring-border-strong w-full"
+                />
+              ) : (
+                <h1 className="text-xl font-bold tracking-tight text-foreground truncate py-1">
+                  {activeTask.title}
+                </h1>
+              )}
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 rounded-md hover:bg-surface-2 hover:text-foreground shrink-0"
+              onClick={() => setEditing(!editing)}
+            >
+              {editing ? (
+                <X className="w-4 h-4 text-foreground-dim" />
+              ) : (
+                <Pencil className="w-4 h-4 text-foreground-dim" />
+              )}
+            </Button>
           </CardHeader>
-          <CardContent className="pt-6 space-y-6">
+
+          <CardContent className="space-y-6 bg-card my-4">
             {/* Status and Priority Selector */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -316,15 +313,15 @@ export default function TaskDetailView({
                   onValueChange={(value) => setFormData({ ...formData, status: value })}
                   disabled={!editing}
                 >
-                  <SelectTrigger className="text-xs h-9 rounded-sm bg-surface-3 border-border-default text-foreground border">
+                  <SelectTrigger className="text-xs h-9 rounded-md bg-surface-3 text-foreground border border-border-default focus:ring-border-strong">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 rounded-sm shadow-none">
+                  <SelectContent className="rounded-md shadow-none bg-surface-2 border border-border-default text-foreground">
                     {STATUSES.map((s) => (
                       <SelectItem
                         key={s}
                         value={s}
-                        className="text-xs capitalize hover:bg-slate-800"
+                        className="text-xs capitalize focus:bg-surface-3 focus:text-foreground"
                       >
                         {STATUS_LABELS[s]}
                       </SelectItem>
@@ -339,15 +336,15 @@ export default function TaskDetailView({
                   onValueChange={(value) => setFormData({ ...formData, priority: value })}
                   disabled={!editing}
                 >
-                  <SelectTrigger className="text-xs h-9 rounded-sm bg-surface-3 border-border-default text-foreground border">
+                  <SelectTrigger className="text-xs h-9 rounded-md bg-surface-3 border border-border-default text-foreground focus:ring-border-strong">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 rounded-sm shadow-none">
+                  <SelectContent className="bg-surface-2 border border-border-default text-foreground rounded-md shadow-none">
                     {PRIORITIES.map((p) => (
                       <SelectItem
                         key={p}
                         value={p}
-                        className="text-xs capitalize hover:bg-slate-800"
+                        className="text-xs capitalize focus:bg-surface-3 focus:text-foreground"
                       >
                         <span className="capitalize">{p}</span>
                       </SelectItem>
@@ -365,7 +362,7 @@ export default function TaskDetailView({
                 onValueChange={handleAssignmentChange}
                 disabled={loading}
               >
-                <SelectTrigger className="text-xs h-9 rounded-sm bg-surface-3 border-border-default text-foreground border">
+                <SelectTrigger className="text-xs h-9 rounded-md bg-surface-3 border border-border-default text-foreground focus:ring-border-strong">
                   {formData.assignedToId &&
                   (activeTask.assigned_to_user || activeTask.assignedTo) ? (
                     <div className="flex items-center gap-2">
@@ -375,41 +372,40 @@ export default function TaskDetailView({
                             (activeTask.assigned_to_user || activeTask.assignedTo)?.avatarUrl || ''
                           }
                         />
-                        <AvatarFallback className="text-[10px] font-bold bg-slate-800 rounded-sm text-slate-300">
+                        <AvatarFallback className="text-[10px] font-bold rounded-sm bg-surface-1 text-foreground-dim">
                           {(activeTask.assigned_to_user || activeTask.assignedTo)?.fullName
                             ?.substring(0, 2)
                             .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-xs font-medium text-slate-200">
+                      <span className="text-xs font-medium text-foreground-muted">
                         {(activeTask.assigned_to_user || activeTask.assignedTo)?.fullName}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-xs text-slate-500">Select team member...</span>
+                    <span className="text-xs text-foreground-dim/70">Select team member...</span>
                   )}
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 rounded-sm shadow-none">
-                  <SelectItem
-                    value="__unassigned__"
-                    className="text-xs text-slate-400 hover:bg-slate-800"
-                  >
+                <SelectContent className="bg-surface-2 border border-border-default text-foreground rounded-md shadow-none">
+                  <SelectItem value="__unassigned__" className="text-xs text-foreground-dim">
                     Unassigned
                   </SelectItem>
                   {teamMembers.map((member) => (
                     <SelectItem
                       key={member.userId}
                       value={member.userId}
-                      className="text-xs hover:bg-slate-800"
+                      className="text-xs focus:bg-surface-3 focus:text-foreground"
                     >
                       <div className="flex items-center gap-2">
                         <Avatar className="h-4 w-4 rounded-sm">
                           <AvatarImage src={member.avatarUrl || ''} />
-                          <AvatarFallback className="text-[10px] bg-slate-800 text-slate-300 rounded-sm">
+                          <AvatarFallback className="text-[10px] bg-surface-1 text-foreground-dim rounded-sm">
                             {member.fullName?.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-slate-200">{member.fullName || member.email}</span>
+                        <span className="text-foreground-muted">
+                          {member.fullName || member.email}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -429,7 +425,7 @@ export default function TaskDetailView({
                 />
               ) : (
                 <div
-                  className="text-xs leading-relaxed p-3 rounded border prose prose-invert max-w-none bg-surface-3 border-border-subtle text-foreground-muted"
+                  className="text-xs leading-relaxed p-3 rounded-md border prose prose-invert max-w-none bg-surface-3 border-border-subtle text-foreground-muted"
                   dangerouslySetInnerHTML={{
                     __html: activeTask.description || '<i>No description provided.</i>',
                   }}
@@ -441,17 +437,17 @@ export default function TaskDetailView({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               <div className="space-y-1">
                 <label className="field-label flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-slate-500" /> Start Date
+                  <Calendar className="w-3.5 h-3.5 text-foreground-dim" /> Start Date
                 </label>
                 {editing ? (
                   <Input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="text-xs h-9 rounded-sm bg-surface-3 border-border-default text-foreground border"
+                    className="text-xs h-9 rounded-md bg-surface-3 border border-border-default text-foreground focus-visible:ring-border-strong"
                   />
                 ) : (
-                  <p className="text-xs font-semibold p-2.5 rounded border bg-surface-3 border-border-subtle text-foreground-muted">
+                  <p className="text-xs font-semibold p-2.5 rounded-md border bg-surface-3 border-border-subtle text-foreground-muted">
                     {activeTask.startDate || activeTask.start_date
                       ? formatDate(activeTask.startDate || activeTask.start_date)
                       : 'Not specified'}
@@ -460,17 +456,17 @@ export default function TaskDetailView({
               </div>
               <div className="space-y-1">
                 <label className="field-label flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-500" /> Due Date (End)
+                  <Clock className="w-3.5 h-3.5 text-foreground-dim" /> Due Date (End)
                 </label>
                 {editing ? (
                   <Input
                     type="date"
                     value={formData.dueDate}
                     onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                    className="text-xs h-9 rounded-sm bg-surface-3 border-border-default text-foreground border"
+                    className="text-xs h-9 rounded-md bg-surface-3 border border-border-default text-foreground focus-visible:ring-border-strong"
                   />
                 ) : (
-                  <p className="text-xs font-semibold p-2.5 rounded border bg-surface-3 border-border-subtle text-foreground-muted">
+                  <p className="text-xs font-semibold p-2.5 rounded-md border bg-surface-3 border-border-subtle text-foreground-muted">
                     {activeTask.dueDate || activeTask.due_date
                       ? formatDate(activeTask.dueDate || activeTask.due_date)
                       : 'Not specified'}
@@ -483,12 +479,13 @@ export default function TaskDetailView({
             <div className="space-y-2 border-t pt-4 border-border-subtle">
               <div className="flex items-center justify-between">
                 <label className="field-label flex items-center gap-1">
-                  <Hourglass className="w-3.5 h-3.5 text-slate-500" /> Work Hours Tracking (JIRA)
+                  <Hourglass className="w-3.5 h-3.5 text-foreground-dim" /> Work Hours Tracking
+                  (JIRA)
                 </label>
                 {!editing && estHours > 0 && (
                   <Badge
                     variant="outline"
-                    className="text-[10px] shadow-none rounded-sm h-5 py-0 px-2 bg-surface-3 border-border-default text-foreground-muted"
+                    className="text-[10px] shadow-none rounded-md h-5 py-0 px-2 bg-surface-3 border border-border-default text-foreground-muted font-medium"
                   >
                     {loggedProgress}% Resource logged
                   </Badge>
@@ -498,7 +495,7 @@ export default function TaskDetailView({
               {editing ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
+                    <span className="text-[10px] text-foreground-dim font-semibold uppercase tracking-wider block">
                       Estimated Hours
                     </span>
                     <Input
@@ -511,11 +508,11 @@ export default function TaskDetailView({
                           estimatedHours: e.target.value,
                         })
                       }
-                      className="text-xs h-8 rounded-sm bg-surface-3 border-border-default text-foreground border"
+                      className="text-xs h-9 rounded-md bg-surface-3 border border-border-default text-foreground focus-visible:ring-border-strong"
                     />
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
+                    <span className="text-[10px] text-foreground-dim font-semibold uppercase tracking-wider block">
                       Actual Logged Hours
                     </span>
                     <Input
@@ -528,16 +525,16 @@ export default function TaskDetailView({
                           actualHours: e.target.value,
                         })
                       }
-                      className="text-xs h-8 rounded-sm bg-surface-3 border-border-default text-foreground border"
+                      className="text-xs h-9 rounded-md bg-surface-3 border border-border-default text-foreground focus-visible:ring-border-strong"
                     />
                   </div>
                 </div>
               ) : (
-                <div className="p-3 rounded border space-y-2 bg-surface-3 border-border-subtle">
-                  <div className="flex justify-between text-xs font-semibold text-slate-300">
+                <div className="p-3 rounded-md border space-y-2 bg-surface-3 border-border-subtle">
+                  <div className="flex justify-between text-xs font-semibold text-foreground-muted">
                     <span>
                       Estimate:{' '}
-                      <span className="font-bold text-slate-200">
+                      <span className="font-bold text-foreground">
                         {formData.estimatedHours || '0'} hrs
                       </span>
                     </span>
@@ -551,14 +548,11 @@ export default function TaskDetailView({
                   {estHours > 0 && (
                     <div className="w-full border h-2 rounded overflow-hidden bg-background border-border-subtle">
                       <div
-                        className={`h-full rounded-sm transition-all duration-300 ${
-                          loggedProgress >= 100
-                            ? 'bg-red-500'
-                            : loggedProgress >= 80
-                              ? 'bg-amber-500'
-                              : 'bg-white/30'
-                        }`}
-                        style={{ width: `${loggedProgress}%` }}
+                        className={`h-full rounded-sm transition-all duration-300 data-[progress=over]:bg-red-500 data-[progress=high]:bg-amber-500 data-[progress=normal]:bg-foreground/30`}
+                        data-progress={
+                          loggedProgress >= 100 ? 'over' : loggedProgress >= 80 ? 'high' : 'normal'
+                        }
+                        style={{ width: `${Math.min(loggedProgress, 100)}%` }}
                       />
                     </div>
                   )}
@@ -568,7 +562,7 @@ export default function TaskDetailView({
 
             {/* Editing actions buttons */}
             {editing && (
-              <div className="flex gap-2 pt-2 justify-end border-t border-slate-850">
+              <div className="flex gap-2 pt-4 justify-end border-t border-border-subtle">
                 <Button
                   size="sm"
                   onClick={handleUpdate}
@@ -581,7 +575,7 @@ export default function TaskDetailView({
                   size="sm"
                   variant="outline"
                   onClick={() => setEditing(false)}
-                  className="text-xs h-8 rounded bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  className="text-xs h-8 rounded-md bg-surface-1 border border-border-default text-foreground-muted hover:bg-surface-3 hover:text-foreground transition-colors"
                 >
                   Cancel
                 </Button>
@@ -601,28 +595,32 @@ export default function TaskDetailView({
         )}
 
         {/* Checklist Section */}
-        <Card className="rounded-lg overflow-hidden bg-surface-2 border border-border-subtle">
-          <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
-            <CardTitle className="text-sm font-bold text-slate-300 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-slate-500" />
+        <Card className="rounded-xl overflow-hidden p-0 border border-border-subtle shadow-none">
+          <CardHeader className="border-b bg-surface-1 border-border-subtle flex flex-row items-center justify-between gap-4 w-full py-4">
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground-muted">
+              <CheckCircle2 className="w-4 h-4 text-foreground-dim" />
               Checklist Tasks
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-4 space-y-4">
+          <CardContent className="space-y-6 bg-card my-4">
             {activeTask.task_checklists && activeTask.task_checklists.length > 0 ? (
               <div className="space-y-3">
                 {activeTask.task_checklists.map((item: any) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 p-2 rounded border transition-colors bg-surface-3 border-border-subtle hover:border-border-default"
+                    className="flex items-center gap-3 p-2 rounded-md border transition-colors bg-surface-3 border-border-subtle hover:border-border-default"
                   >
                     <Checkbox
                       checked={item.completed}
                       onCheckedChange={(checked) => handleChecklistToggle(item.id, !!checked)}
-                      className="border-border-strong bg-surface-1 data-[state=checked]:bg-white data-[state=checked]:border-white"
+                      className="border-border-strong bg-surface-1 data-[state=checked]:bg-foreground data-[state=checked]:border-foreground data-[state=checked]:text-surface-1 focus-visible:ring-border-strong"
                     />
                     <span
-                      className={`text-xs ${item.completed ? 'line-through text-slate-500 font-medium' : 'text-slate-200 font-semibold'}`}
+                      className={`text-xs transition-colors ${
+                        item.completed
+                          ? 'line-through font-medium text-foreground-dim/60'
+                          : 'font-semibold text-foreground-muted'
+                      }`}
                     >
                       {item.title}
                     </span>
@@ -630,7 +628,9 @@ export default function TaskDetailView({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-500 text-center py-2">No checklist items defined.</p>
+              <p className="text-xs text-center py-2 text-foreground-dim/60 italic">
+                No checklist items defined.
+              </p>
             )}
 
             <form
@@ -641,13 +641,13 @@ export default function TaskDetailView({
                 placeholder="Add checklist item..."
                 value={checklistTitle}
                 onChange={(e) => setChecklistTitle(e.target.value)}
-                className="border text-slate-200 text-xs h-8 focus-visible:ring-slate-700 rounded-sm bg-surface-3 border-border-default"
+                className="border text-xs h-8 rounded-md bg-surface-3 border-border-default text-foreground placeholder:text-foreground-dim/40 focus-visible:ring-border-strong"
               />
               <Button
                 type="submit"
                 size="sm"
                 disabled={loading}
-                className="text-xs h-8 bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 rounded"
+                className="text-xs border bg-surface-1 border-border-default text-foreground-muted hover:bg-surface-3 hover:text-foreground transition-colors cursor-pointer text-[11px] h-8 px-2.5 rounded-md font-semibold btn-ghost"
               >
                 Add
               </Button>
@@ -656,14 +656,14 @@ export default function TaskDetailView({
         </Card>
 
         {/* Task Comments Stream */}
-        <Card className="rounded-lg overflow-hidden bg-card border-border-subtle border">
-          <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
-            <CardTitle className="text-sm font-bold text-slate-300 flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 text-slate-500" />
+        <Card className="rounded-xl overflow-hidden p-0 border border-border-subtle shadow-none">
+          <CardHeader className="border-b bg-surface-1 border-border-subtle flex flex-row items-center justify-between gap-4 w-full py-4">
+            <CardTitle className="text-sm font-bold text-gray-300 flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-gray-500" />
               Comments Stream ({activeTask.task_comments?.length || 0})
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6 space-y-4">
+          <CardContent className="space-y-6 bg-card my-4">
             {/* Feed stream list */}
             {activeTask.task_comments && activeTask.task_comments.length > 0 && (
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -673,14 +673,14 @@ export default function TaskDetailView({
                     className="p-3 rounded border text-xs space-y-1 bg-surface-3 border-border-subtle"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-200">
+                      <span className="font-bold text-gray-200">
                         {comment.user?.fullName || 'Unknown'}
                       </span>
-                      <span className="text-[9px] font-mono text-slate-500">
+                      <span className="text-[9px] font-mono text-gray-500">
                         {formatDate(comment.created_at)}
                       </span>
                     </div>
-                    <p className="text-slate-300 leading-relaxed">{comment.content}</p>
+                    <p className="text-gray-300 leading-relaxed">{comment.content}</p>
                   </div>
                 ))}
               </div>
@@ -696,14 +696,14 @@ export default function TaskDetailView({
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 rows={3}
-                className="text-slate-200 text-xs rounded focus-visible:ring-slate-700 bg-surface-3 border-border-default"
+                className="text-gray-200 text-xs rounded focus-visible:ring-gray-700 bg-surface-3 border-border-default"
               />
               <div className="flex justify-end">
                 <Button
                   type="submit"
                   disabled={loading || !commentText.trim()}
                   size="sm"
-                  className="text-xs h-8 bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 rounded"
+                  className="text-xs border bg-surface-1 border-border-default text-foreground-muted hover:bg-surface-3 hover:text-foreground transition-colors cursor-pointer text-[11px] h-7 px-2.5 rounded-md font-semibold btn-ghost"
                 >
                   {loading ? 'Posting...' : 'Post Comment'}
                 </Button>
@@ -716,23 +716,23 @@ export default function TaskDetailView({
       {/* Sidebar Task Attributes Panel */}
       <div className="space-y-4">
         {/* Quick Attributes summary */}
-        <Card className="rounded-lg overflow-hidden bg-card border-border-subtle border">
-          <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
-            <CardTitle className="text-sm font-bold text-slate-300">Task Attributes</CardTitle>
+        <Card className="rounded-xl overflow-hidden p-0 border border-border-subtle shadow-none">
+          <CardHeader className="border-b bg-surface-1 border-border-subtle flex flex-row items-center justify-between gap-4 w-full py-4">
+            <CardTitle className="text-sm font-bold text-gray-300">Task Attributes</CardTitle>
           </CardHeader>
-          <CardContent className="pt-4 space-y-4 text-xs">
+          <CardContent className="space-y-6 bg-card my-4">
             <div>
-              <p className="text-slate-500 mb-1 font-semibold uppercase tracking-wider text-[9px]">
+              <p className="text-gray-500 mb-1 font-semibold uppercase tracking-wider text-[9px]">
                 Status
               </p>
               <Badge
-                className={`shadow-none font-bold text-[10px] h-5 py-0 px-2 rounded-sm ${STATUS_COLORS[activeTask.status] || 'bg-slate-900 text-slate-400'}`}
+                className={`shadow-none font-bold text-[10px] h-5 py-0 px-2 rounded-sm ${STATUS_COLORS[activeTask.status] || 'bg-gray-900 text-gray-400'}`}
               >
                 {STATUS_LABELS[activeTask.status]}
               </Badge>
             </div>
             <div>
-              <p className="text-slate-500 mb-1 font-semibold uppercase tracking-wider text-[9px]">
+              <p className="text-gray-500 mb-1 font-semibold uppercase tracking-wider text-[9px]">
                 Priority
               </p>
               <Badge
@@ -742,31 +742,30 @@ export default function TaskDetailView({
               </Badge>
             </div>
 
-            {/* Detailed Assignee and workspace hierarchy */}
             <div>
-              <p className="text-slate-500 mb-1 font-semibold uppercase tracking-wider text-[9px]">
+              <p className="mb-1 font-semibold uppercase tracking-wider text-[9px] text-foreground-dim">
                 Assignee
               </p>
               {activeTask.assigned_to_user || activeTask.assignedTo ? (
-                <div className="flex items-center gap-2 p-2 rounded border bg-surface-3 border-border-subtle">
+                <div className="flex items-center gap-2 p-2 rounded-md border bg-surface-3 border-border-subtle">
                   <Avatar className="h-6 w-6 rounded-sm">
                     <AvatarImage
                       src={(activeTask.assigned_to_user || activeTask.assignedTo)?.avatarUrl || ''}
                     />
-                    <AvatarFallback className="text-[10px] font-bold bg-slate-800 text-slate-300 rounded-sm">
+                    <AvatarFallback className="text-[10px] font-bold rounded-sm bg-surface-2 text-foreground-dim">
                       {(activeTask.assigned_to_user || activeTask.assignedTo)?.fullName
                         ?.substring(0, 2)
-                        .toUpperCase()}
+                        ?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="font-bold text-slate-200">
+                  <div className="text-xs">
+                    <p className="font-bold text-foreground">
                       {(activeTask.assigned_to_user || activeTask.assignedTo)?.fullName}
                     </p>
                     {assigneeManager && (
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-[10px] text-foreground-muted">
                         Reports to:{' '}
-                        <span className="font-semibold text-slate-200">
+                        <span className="font-semibold text-foreground-dim">
                           {assigneeManager.fullName}
                         </span>
                       </p>
@@ -774,15 +773,15 @@ export default function TaskDetailView({
                   </div>
                 </div>
               ) : (
-                <p className="text-slate-500 italic">No one assigned</p>
+                <p className="text-xs italic text-(--foreground-dim)/60">No one assigned</p>
               )}
             </div>
 
             <div>
-              <p className="text-slate-500 mb-1 font-semibold uppercase tracking-wider text-[9px]">
+              <p className="text-gray-500 mb-1 font-semibold uppercase tracking-wider text-[9px]">
                 Task Owner
               </p>
-              <p className="font-bold text-slate-200">
+              <p className="font-bold text-gray-200">
                 {activeTask.created_by_user?.fullName || 'System Account'}
               </p>
             </div>
@@ -790,16 +789,16 @@ export default function TaskDetailView({
             {/* Start and end dates sidebar visual card */}
             <div className="border-t border-border-subtle pt-3 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-slate-450">Start Date:</span>
-                <span className="font-semibold text-slate-300">
+                <span className="text-gray-450">Start Date:</span>
+                <span className="font-semibold text-gray-300">
                   {activeTask.startDate || activeTask.start_date
                     ? formatDate(activeTask.startDate || activeTask.start_date)
                     : 'N/A'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-450">End Date:</span>
-                <span className="font-semibold text-slate-300">
+                <span className="text-gray-450">End Date:</span>
+                <span className="font-semibold text-gray-300">
                   {activeTask.dueDate || activeTask.due_date
                     ? formatDate(activeTask.dueDate || activeTask.due_date)
                     : 'N/A'}

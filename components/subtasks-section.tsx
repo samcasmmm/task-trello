@@ -206,7 +206,6 @@ export default function SubtasksSection({
       </div>
 
       <div className="p-3">
-        {/* Progress bar */}
         {subtasks.length > 0 && (
           <div className="flex items-center gap-2.5 mb-3">
             <div className="flex-1 h-1 rounded-full overflow-hidden bg-surface-3">

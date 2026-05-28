@@ -31,7 +31,6 @@ import {
   History,
   Search,
   RefreshCw,
-  Key,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/axios';
@@ -162,78 +161,101 @@ export default function AdminPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between border-b pb-5">
+      <div className="flex items-center justify-between border-b border-border-subtle pb-5">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <ShieldAlert className="w-8 h-8 text-red-600" />
+          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+            <ShieldAlert className="w-8 h-8 text-rose-500" />
             Platform Admin Console
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm mt-1 text-foreground-muted">
             Global controls for multi-tenant accounts, RBAC memberships, and real-time operations
             audit logs
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchData}
+            disabled={loading}
+            className="btn-ghost"
+          >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh Data
           </Button>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="bg-red-600 hover:bg-red-700">
+              <Button size="sm" className="btn-primary text-xs font-bold rounded-md">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Add Platform User
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] bg-slate-900 border border-slate-800 text-slate-100 shadow-none rounded">
               <DialogHeader>
-                <DialogTitle>Register Platform User</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-slate-100 font-bold">
+                  Register Platform User
+                </DialogTitle>
+                <DialogDescription className="text-slate-400">
                   Register a new platform-wide user and configure their initial access role.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateUser} className="space-y-4 py-4">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Full Name</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Full Name
+                  </label>
                   <Input
                     required
                     placeholder="Jane Doe"
                     value={newUser.fullName}
                     onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
+                    className="bg-slate-950/80 border-slate-800 focus-visible:ring-slate-700/50 text-slate-200 h-9 text-xs rounded-sm placeholder:text-slate-600"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Email Address</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Email Address
+                  </label>
                   <Input
                     required
                     type="email"
                     placeholder="jane@example.com"
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    className="bg-slate-950/80 border-slate-800 focus-visible:ring-slate-700/50 text-slate-200 h-9 text-xs rounded-sm placeholder:text-slate-600"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Password</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Password
+                  </label>
                   <Input
                     required
                     type="password"
                     placeholder="••••••••"
                     value={newUser.password}
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    className="bg-slate-950/80 border-slate-800 focus-visible:ring-slate-700/50 text-slate-200 h-9 text-xs rounded-sm placeholder:text-slate-600"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">System Role</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    System Role
+                  </label>
                   <Select
                     value={newUser.roleId}
                     onValueChange={(val) => setNewUser({ ...newUser, roleId: val })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-slate-950/80 border-slate-800 focus:ring-slate-700 text-xs h-9 text-slate-200 rounded-sm">
                       <SelectValue placeholder="Select system role" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 rounded-sm shadow-none">
                       {systemRoles.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>
+                        <SelectItem
+                          key={r.id}
+                          value={r.id}
+                          className="text-xs capitalize hover:bg-slate-800"
+                        >
                           {r.name}
                         </SelectItem>
                       ))}
@@ -241,7 +263,9 @@ export default function AdminPage() {
                   </Select>
                 </div>
                 <DialogFooter className="pt-4">
-                  <Button type="submit">Register User</Button>
+                  <Button type="submit" className="btn-primary text-xs h-9 font-bold rounded-md">
+                    Register User
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -260,26 +284,35 @@ export default function AdminPage() {
         className="w-full"
       >
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
-          <TabsList className="bg-gray-100 p-1">
-            <TabsTrigger value="users" className="gap-2">
-              <UserPlus className="w-4 h-4" />
+          <TabsList className="bg-surface-2 p-1 border border-border-subtle rounded-lg">
+            <TabsTrigger
+              value="users"
+              className="gap-2 text-xs font-bold px-3 py-1.5 rounded-md data-[state=active]:bg-surface-3"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
               Users ({users.length})
             </TabsTrigger>
-            <TabsTrigger value="tenants" className="gap-2">
-              <FolderKanban className="w-4 h-4" />
+            <TabsTrigger
+              value="tenants"
+              className="gap-2 text-xs font-bold px-3 py-1.5 rounded-md data-[state=active]:bg-surface-3"
+            >
+              <FolderKanban className="w-3.5 h-3.5" />
               Workspaces ({tenants.length})
             </TabsTrigger>
-            <TabsTrigger value="logs" className="gap-2">
-              <History className="w-4 h-4" />
+            <TabsTrigger
+              value="logs"
+              className="gap-2 text-xs font-bold px-3 py-1.5 rounded-md data-[state=active]:bg-surface-3"
+            >
+              <History className="w-3.5 h-3.5" />
               Audit Logs ({logs.length})
             </TabsTrigger>
           </TabsList>
 
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-foreground-dim" />
             <Input
               placeholder={`Search ${activeTab}...`}
-              className="pl-9"
+              className="w-full pl-8 pr-3 py-2 text-xs font-medium rounded-lg outline-none bg-surface-2 border border-border-default text-foreground focus:border-border-strong"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -288,67 +321,75 @@ export default function AdminPage() {
 
         {/* Tab 1: Users */}
         <TabsContent value="users">
-          <Card>
-            <CardHeader className="pb-3 border-b">
-              <CardTitle>User Directory</CardTitle>
-              <CardDescription>
+          <Card className="rounded-lg overflow-hidden bg-surface-2 border border-border-subtle shadow-none">
+            <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
+              <CardTitle className="text-sm font-bold text-slate-300">User Directory</CardTitle>
+              <CardDescription className="text-xs text-foreground-dim">
                 Assign system-level permissions and roles. Demoting, upgrading, and deleting user
                 accounts takes effect instantly.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               {loading ? (
-                <div className="text-center py-12 text-gray-500">Loading directory data...</div>
+                <div className="text-center py-12 text-foreground-dim text-xs font-medium">
+                  Loading directory data...
+                </div>
               ) : filteredUsers.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
+                  <table className="w-full text-xs text-left border-collapse">
                     <thead>
-                      <tr className="border-b text-gray-600 font-medium">
-                        <th className="pb-3">User Profile</th>
-                        <th className="pb-3">Email Address</th>
-                        <th className="pb-3">System Role Assignment</th>
-                        <th className="pb-3 text-right">Actions</th>
+                      <tr className="border-b border-border-subtle text-foreground-dim font-bold uppercase tracking-wider text-[10px]">
+                        <th className="pb-3 px-4">User Profile</th>
+                        <th className="pb-3 px-4">Email Address</th>
+                        <th className="pb-3 px-4">System Role Assignment</th>
+                        <th className="pb-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody className="divide-y divide-border-subtle">
                       {filteredUsers.map((u) => {
                         const userRole = u.roles[0]?.id || 'r-member';
                         return (
-                          <tr key={u.id} className="hover:bg-gray-50/50">
-                            <td className="py-4">
+                          <tr key={u.id} className="hover:bg-surface-3/50 transition-colors">
+                            <td className="py-4 px-4">
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-9 w-9">
                                   <AvatarImage src={u.avatarUrl || ''} />
-                                  <AvatarFallback>
+                                  <AvatarFallback className="bg-surface-3 text-slate-200 font-bold text-xs">
                                     {u.fullName?.substring(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
-                                <span className="font-semibold text-gray-900">{u.fullName}</span>
+                                <span className="font-semibold text-foreground">{u.fullName}</span>
                               </div>
                             </td>
-                            <td className="py-4 text-gray-600">{u.email}</td>
-                            <td className="py-4">
+                            <td className="py-4 px-4 text-foreground-muted font-medium">
+                              {u.email}
+                            </td>
+                            <td className="py-4 px-4">
                               <Select
                                 value={userRole}
                                 onValueChange={(val) => handleRoleChange(u.id, val)}
                               >
-                                <SelectTrigger className="w-44">
+                                <SelectTrigger className="w-44 bg-surface-3 border-border-default text-xs h-8 text-foreground-muted rounded-sm">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 rounded-sm shadow-none">
                                   {systemRoles.map((role) => (
-                                    <SelectItem key={role.id} value={role.id}>
+                                    <SelectItem
+                                      key={role.id}
+                                      value={role.id}
+                                      className="text-xs capitalize hover:bg-slate-800"
+                                    >
                                       {role.name}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
                             </td>
-                            <td className="py-4 text-right">
+                            <td className="py-4 px-4 text-right">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="text-rose-400 hover:text-rose-500 hover:bg-rose-950/20"
                                 onClick={() => handleDeleteUser(u.id)}
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -361,7 +402,7 @@ export default function AdminPage() {
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-foreground-dim text-xs font-medium">
                   No platform users found matching your search.
                 </div>
               )}
@@ -371,57 +412,63 @@ export default function AdminPage() {
 
         {/* Tab 2: Workspaces */}
         <TabsContent value="tenants">
-          <Card>
-            <CardHeader className="pb-3 border-b">
-              <CardTitle>Platform Workspaces</CardTitle>
-              <CardDescription>
+          <Card className="rounded-lg overflow-hidden bg-surface-2 border border-border-subtle shadow-none">
+            <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
+              <CardTitle className="text-sm font-bold text-slate-300">
+                Platform Workspaces
+              </CardTitle>
+              <CardDescription className="text-xs text-foreground-dim">
                 Overview of tenant organizations hosted on this engine, including member counts and
                 project pipelines.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               {loading ? (
-                <div className="text-center py-12 text-gray-500">Loading workspaces...</div>
+                <div className="text-center py-12 text-foreground-dim text-xs font-medium">
+                  Loading workspaces...
+                </div>
               ) : filteredTenants.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {filteredTenants.map((t) => (
                     <Card
                       key={t.id}
-                      className="hover:shadow-md transition-shadow relative overflow-hidden"
+                      className="hover:shadow-md transition-shadow relative overflow-hidden bg-surface-3 border border-border-subtle shadow-none"
                     >
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-red-500 to-amber-500" />
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-rose-500 to-amber-500" />
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-bold flex items-center justify-between">
+                        <CardTitle className="text-sm font-bold flex items-center justify-between text-slate-200">
                           {t.name}
-                          <Badge variant="outline">{t.slug}</Badge>
+                          <Badge className="text-[9px] bg-slate-800 border border-slate-700 text-slate-300 font-mono shadow-none uppercase font-bold py-0.5 px-1.5">
+                            {t.slug}
+                          </Badge>
                         </CardTitle>
-                        <CardDescription className="line-clamp-2 mt-1">
+                        <CardDescription className="line-clamp-2 mt-1 text-xs text-foreground-dim">
                           {t.description || 'No workspace description.'}
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="pt-2 text-sm text-gray-600 space-y-2">
-                        <div className="flex justify-between border-b pb-1">
+                      <CardContent className="pt-2 text-xs text-foreground-muted space-y-2">
+                        <div className="flex justify-between border-b border-border-subtle pb-1">
                           <span>Team size</span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-slate-200">
                             {t.memberCount} members
                           </span>
                         </div>
-                        <div className="flex justify-between border-b pb-1">
+                        <div className="flex justify-between border-b border-border-subtle pb-1">
                           <span>Active Projects</span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-slate-200">
                             {t.projectCount} projects
                           </span>
                         </div>
                         <div className="flex justify-between pt-1">
                           <span>Tenant ID</span>
-                          <span className="font-mono text-xs text-gray-400">{t.id}</span>
+                          <span className="font-mono text-[10px] text-slate-500">{t.id}</span>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-foreground-dim text-xs font-medium">
                   No workspaces found matching search.
                 </div>
               )}
@@ -431,50 +478,56 @@ export default function AdminPage() {
 
         {/* Tab 3: Audit Logs */}
         <TabsContent value="logs">
-          <Card>
-            <CardHeader className="pb-3 border-b">
-              <CardTitle>System Operations Audit History</CardTitle>
-              <CardDescription>
+          <Card className="rounded-lg overflow-hidden bg-surface-2 border border-border-subtle shadow-none">
+            <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
+              <CardTitle className="text-sm font-bold text-slate-300">
+                System Operations Audit History
+              </CardTitle>
+              <CardDescription className="text-xs text-foreground-dim">
                 Full security and action trail of project updates, task states, RBAC role updates,
                 and platform creation logs.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               {loading ? (
-                <div className="text-center py-12 text-gray-500">Loading audit trail...</div>
+                <div className="text-center py-12 text-foreground-dim text-xs font-medium">
+                  Loading audit trail...
+                </div>
               ) : filteredLogs.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
+                  <table className="w-full text-xs text-left border-collapse">
                     <thead>
-                      <tr className="border-b text-gray-600 font-medium">
-                        <th className="pb-3">Action Event</th>
-                        <th className="pb-3">Performed By</th>
-                        <th className="pb-3">Metadata Info</th>
-                        <th className="pb-3 text-right">Timestamp</th>
+                      <tr className="border-b border-border-subtle text-foreground-dim font-bold uppercase tracking-wider text-[10px]">
+                        <th className="pb-3 px-4">Action Event</th>
+                        <th className="pb-3 px-4">Performed By</th>
+                        <th className="pb-3 px-4">Metadata Info</th>
+                        <th className="pb-3 px-4 text-right">Timestamp</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-border-subtle">
                       {filteredLogs.map((l) => (
-                        <tr key={l.id} className="hover:bg-gray-50/50">
-                          <td className="py-3 font-mono text-xs font-bold text-gray-900">
-                            <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 border-none capitalize shadow-none">
+                        <tr key={l.id} className="hover:bg-surface-3/50 transition-colors">
+                          <td className="py-3 px-4 font-mono text-xs font-bold">
+                            <Badge className="bg-surface-3 border border-border-subtle text-foreground-muted hover:bg-surface-3 capitalize shadow-none">
                               {l.action.replace(/_/g, ' ')}
                             </Badge>
                           </td>
-                          <td className="py-3 text-gray-700">
+                          <td className="py-3 px-4 text-foreground-muted font-medium">
                             <div>
-                              <div className="font-medium text-gray-900">
+                              <div className="font-semibold text-slate-200">
                                 {l.userFullName || 'System'}
                               </div>
-                              <div className="text-xs text-gray-500">{l.userEmail}</div>
+                              <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                {l.userEmail}
+                              </div>
                             </div>
                           </td>
-                          <td className="py-3">
-                            <pre className="text-xs text-gray-500 font-mono bg-gray-50 p-2 rounded max-w-sm truncate overflow-x-auto">
+                          <td className="py-3 px-4">
+                            <pre className="text-[10px] text-slate-400 font-mono bg-slate-950/40 border border-border-subtle p-2 rounded max-w-sm truncate overflow-x-auto">
                               {JSON.stringify(l.metadata || {}, null, 2)}
                             </pre>
                           </td>
-                          <td className="py-3 text-right text-gray-500 text-xs font-mono">
+                          <td className="py-3 px-4 text-right text-slate-500 font-mono text-[10px]">
                             {new Date(l.createdAt).toLocaleString()}
                           </td>
                         </tr>
@@ -483,7 +536,7 @@ export default function AdminPage() {
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-foreground-dim text-xs font-medium">
                   No system audit logs found matching search.
                 </div>
               )}

@@ -82,10 +82,8 @@ export default function CustomFieldsManager({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Custom Fields</h2>
-        <p className="text-gray-600">
-          Add custom fields to extend task properties for your project
-        </p>
+        <h2 className="text-2xl font-bold text-white mb-2">Custom Fields</h2>
+        <p className="text-base">Add custom fields to extend task properties for your project</p>
       </div>
 
       {/* Fields list */}
@@ -102,8 +100,8 @@ export default function CustomFieldsManager({
                   className="flex items-center justify-between p-4 rounded-lg bg-gray-50"
                 >
                   <div>
-                    <h4 className="font-medium text-gray-900">{field.name}</h4>
-                    <p className="text-sm text-gray-600 capitalize">
+                    <h4 className="font-medium text-white">{field.name}</h4>
+                    <p className="text-base capitalize">
                       Type: {field.field_type.replace('_', ' ')}
                     </p>
                   </div>
@@ -123,7 +121,7 @@ export default function CustomFieldsManager({
       ) : (
         <Card>
           <CardContent className="py-8 text-center">
-            <p className="text-gray-600 mb-4">No custom fields yet</p>
+            <p className="text-base mb-4">No custom fields yet</p>
             <p className="text-sm text-gray-500">
               Create custom fields to add additional properties to your tasks
             </p>
@@ -140,7 +138,7 @@ export default function CustomFieldsManager({
           <CardContent>
             <form onSubmit={handleAddField} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Field Name</label>
+                <label className="block text-sm font-medium text-white mb-1">Field Name</label>
                 <Input
                   placeholder="e.g., Department, Budget, Client"
                   value={newField.name}
@@ -149,7 +147,7 @@ export default function CustomFieldsManager({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Field Type</label>
+                <label className="block text-sm font-medium text-white mb-1">Field Type</label>
                 <Select
                   value={newField.field_type}
                   onValueChange={(value) => setNewField({ ...newField, field_type: value })}
@@ -169,7 +167,7 @@ export default function CustomFieldsManager({
 
               {(newField.field_type === 'select' || newField.field_type === 'multiselect') && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-white mb-1">
                     Options (comma-separated)
                   </label>
                   <Input

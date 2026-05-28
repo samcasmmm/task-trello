@@ -58,7 +58,7 @@ interface WorkspaceRole {
 
 const ROLE_COLORS: Record<string, string> = {
   owner: 'bg-purple-100 text-purple-800 border border-purple-200 shadow-sm',
-  admin: 'bg-blue-100 text-blue-800 border border-blue-200 shadow-sm',
+  admin: 'bg-slate-800 text-slate-200 border border-slate-700 shadow-sm',
   member: 'bg-green-100 text-green-800 border border-green-200 shadow-sm',
   viewer: 'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm',
 };

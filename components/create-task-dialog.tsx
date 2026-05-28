@@ -87,12 +87,12 @@ export default function CreateTaskDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-md bg-slate-900 border border-slate-800 text-slate-100 shadow-none rounded">
+      <DialogContent className="max-w-md bg-surface-2 border border-border-default text-foreground shadow-none rounded-xl">
         <DialogHeader className="space-y-1.5">
-          <DialogTitle className="text-lg font-bold text-slate-100 tracking-tight">
+          <DialogTitle className="text-lg font-bold text-foreground tracking-tight">
             {parentTaskId ? 'Create Subtask' : 'Create New Task'}
           </DialogTitle>
-          <DialogDescription className="text-xs text-slate-400">
+          <DialogDescription className="text-xs text-foreground-muted">
             {parentTaskId
               ? 'Add a subtask to organize your work'
               : 'Add a new task to your project'}
@@ -101,7 +101,7 @@ export default function CreateTaskDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground-dim mb-1">
               Task Title
             </label>
             <Input
@@ -109,12 +109,12 @@ export default function CreateTaskDialog({
               placeholder="e.g., Design homepage mockup"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="field-input h-9 text-xs rounded-md placeholder:opacity-30"
+              className="field-input h-9 text-xs rounded-md placeholder:text-foreground-dim/30 border-border-default focus-visible:ring-border-strong"
             />
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground-dim mb-1">
               Description
             </label>
             <WysiwygEditor
@@ -127,19 +127,23 @@ export default function CreateTaskDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground-dim mb-1">
                 Priority
               </label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => setFormData({ ...formData, priority: value })}
               >
-                <SelectTrigger className="bg-slate-950/80 border-slate-800 focus:ring-slate-700 text-xs h-9 text-slate-200 rounded-sm">
+                <SelectTrigger className="bg-surface-3 border-border-default focus:ring-border-strong text-xs h-9 text-foreground-muted rounded-md">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800 text-slate-100 rounded-sm shadow-none">
+                <SelectContent className="bg-surface-2 border border-border-default text-foreground rounded-md shadow-none">
                   {PRIORITIES.map((p) => (
-                    <SelectItem key={p} value={p} className="text-xs capitalize hover:bg-slate-800">
+                    <SelectItem
+                      key={p}
+                      value={p}
+                      className="text-xs capitalize focus:bg-surface-3 focus:text-foreground"
+                    >
                       <span className="capitalize">{p}</span>
                     </SelectItem>
                   ))}
@@ -148,7 +152,7 @@ export default function CreateTaskDialog({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground-dim mb-1">
                 Estimate Hours
               </label>
               <Input
@@ -156,43 +160,43 @@ export default function CreateTaskDialog({
                 placeholder="e.g., 40"
                 value={formData.estimatedHours}
                 onChange={(e) => setFormData({ ...formData, estimatedHours: e.target.value })}
-                className="bg-slate-950/80 border-slate-800 focus-visible:ring-indigo-500/50 text-slate-200 h-9 text-xs rounded-sm placeholder:text-slate-600"
+                className="bg-surface-3 border-border-default focus-visible:ring-border-strong text-foreground h-9 text-xs rounded-md placeholder:text-foreground-dim/30"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground-dim mb-1">
                 Start Date
               </label>
               <Input
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="bg-slate-950/80 border-slate-800 focus-visible:ring-indigo-500/50 text-slate-200 h-9 text-xs rounded-sm placeholder:text-slate-600"
+                className="bg-surface-3 border-border-default focus-visible:ring-border-strong text-foreground h-9 text-xs rounded-md select-none accent-border-strong"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground-dim mb-1">
                 Due Date / End
               </label>
               <Input
                 type="date"
                 value={formData.dueDate}
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="bg-slate-950/80 border-slate-800 focus-visible:ring-indigo-500/50 text-slate-200 h-9 text-xs rounded-sm placeholder:text-slate-600"
+                className="bg-surface-3 border-border-default focus-visible:ring-border-strong text-foreground h-9 text-xs rounded-md select-none accent-border-strong"
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-slate-800 mt-4">
+          <div className="flex justify-end gap-3 pt-3 border-t border-border-subtle mt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="btn-ghost text-xs h-9 rounded-md"
+              className="btn-ghost text-xs h-9 rounded-md text-foreground-muted"
             >
               Cancel
             </Button>

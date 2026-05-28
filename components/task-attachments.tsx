@@ -8,8 +8,8 @@ export default function TaskAttachments({ attachments = [] }: { attachments?: an
   const getFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes));
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
@@ -18,31 +18,35 @@ export default function TaskAttachments({ attachments = [] }: { attachments?: an
   };
 
   return (
-    <Card className="rounded-lg overflow-hidden bg-surface-2 border border-border-subtle">
-      <CardHeader className="pb-3 border-b bg-surface-1 border-border-subtle">
-        <CardTitle className="text-sm font-bold text-slate-300 flex items-center gap-2">
-          <File className="w-4 h-4 text-slate-500" />
-          Attachments ({attachments.length})
+    <Card className="rounded-xl overflow-hidden bg-card border border-border-subtle shadow-none p-0">
+      <CardHeader className="border-b bg-surface-1 border-border-subtle flex flex-row items-center justify-between gap-4 w-full py-4">
+        <CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground-muted">
+          <>
+            <File className="w-4 h-4 text-foreground-dim" />
+            Attachments ({attachments.length})
+          </>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
+
+      <CardContent className="p-4 bg-card">
         {attachments.length > 0 ? (
           <div className="space-y-2">
             {attachments.map((attachment: any) => (
               <div
                 key={attachment.id}
-                className="flex items-center gap-3 p-3 rounded-lg border bg-surface-3 border-border-subtle"
+                className="flex items-center gap-3 p-3 rounded-md border bg-surface-3 border-border-subtle hover:border-border-default transition-colors"
               >
-                <div className="shrink-0 w-10 h-10 rounded flex items-center justify-center border bg-surface-1 border-border-strong">
-                  <span className="text-[10px] font-black text-slate-400">
+                <div className="shrink-0 w-10 h-10 rounded-md flex items-center justify-center border bg-surface-1 border-border-strong">
+                  <span className="text-[10px] font-black text-foreground-dim">
                     {getFileIcon(attachment.filename)}
                   </span>
                 </div>
+
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-slate-200 truncate">
+                  <p className="text-xs font-semibold text-foreground truncate">
                     {attachment.filename}
                   </p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">
+                  <p className="text-[10px] text-foreground-dim/70 mt-0.5 font-mono">
                     {getFileSize(attachment.fileSize)}
                   </p>
                 </div>
@@ -50,7 +54,9 @@ export default function TaskAttachments({ attachments = [] }: { attachments?: an
             ))}
           </div>
         ) : (
-          <p className="text-xs text-slate-500 text-center py-6">No attachments yet</p>
+          <p className="text-xs text-center py-6 text-foreground-dim/60 italic">
+            No attachments yet
+          </p>
         )}
       </CardContent>
     </Card>

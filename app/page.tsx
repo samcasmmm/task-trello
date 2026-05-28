@@ -27,12 +27,10 @@ export default function Page() {
   }, [router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-900 border-t-transparent" />
-        </div>
-        <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
+    <main className="flex items-center justify-center min-h-dvh bg-background">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin" />
+        <p className="text-[11px] text-foreground-dim">Loading...</p>
       </div>
     </main>
   );

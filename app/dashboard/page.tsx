@@ -48,7 +48,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="flex flex-col items-center gap-3">
           <div className="w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin" />
           <p className="text-xs font-medium text-foreground-dim">Loading...</p>

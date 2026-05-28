@@ -33,12 +33,10 @@ export default function ProjectSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-white mb-4">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-900 border-t-transparent" />
-          </div>
-          <p className="text-sm text-muted-foreground">Loading project...</p>
+      <div className="flex items-center justify-center min-h-dvh">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin" />
+          <p className="text-[11px] text-foreground-dim">Loading project...</p>
         </div>
       </div>
     );
@@ -59,8 +57,15 @@ export default function ProjectSettingsPage() {
       </Link>
 
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Project Settings</h1>
-        <p className="mt-2 text-gray-600">{project.name}</p>
+        <h1 className="text-3xl font-bold text-white">Project Settings</h1>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-foreground-dim">
+            Project:
+          </span>
+          <p className="text-white bg-white/20 max-w-fit px-3 py-1 rounded-md font-semibold tracking-tight text-xs">
+            {project.name}
+          </p>
+        </div>
       </div>
 
       {/* Custom fields manager */}

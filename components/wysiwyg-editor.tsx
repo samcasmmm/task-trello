@@ -55,14 +55,14 @@ export default function WysiwygEditor({
   };
 
   return (
-    <div className="border border-slate-800 rounded bg-slate-950 text-slate-100 overflow-hidden flex flex-col focus-within:border-slate-700 transition-colors">
+    <div className="border rounded bg-surface-3 border-border-default text-foreground overflow-hidden flex flex-col focus-within:border-border-strong transition-colors">
       {/* Editor Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-900 border-b border-slate-800 select-none">
+      <div className="flex flex-wrap items-center gap-1 p-1 bg-surface-2 border-b border-border-default select-none">
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-surface-3 hover:text-foreground"
           onClick={() => executeCommand('bold')}
           title="Bold"
         >
@@ -72,7 +72,7 @@ export default function WysiwygEditor({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-surface-3 hover:text-foreground"
           onClick={() => executeCommand('italic')}
           title="Italic"
         >
@@ -82,7 +82,7 @@ export default function WysiwygEditor({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-surface-3 hover:text-foreground"
           onClick={() => executeCommand('underline')}
           title="Underline"
         >
@@ -92,20 +92,20 @@ export default function WysiwygEditor({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-surface-3 hover:text-foreground"
           onClick={() => executeCommand('strikeThrough')}
           title="Strikethrough"
         >
           <Strikethrough className="h-3.5 w-3.5" />
         </Button>
 
-        <div className="w-[1px] h-4 bg-slate-800 mx-1" />
+        <div className="w-px h-4 bg-border-subtle mx-1" />
 
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-surface-3 hover:text-foreground"
           onClick={() => executeCommand('formatBlock', '<h3>')}
           title="Heading 3"
         >
@@ -115,20 +115,20 @@ export default function WysiwygEditor({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-surface-3 hover:text-foreground"
           onClick={() => executeCommand('formatBlock', '<h4>')}
           title="Heading 4"
         >
           <Heading4 className="h-3.5 w-3.5" />
         </Button>
 
-        <div className="w-[1px] h-4 bg-slate-800 mx-1" />
+        <div className="w-px h-4 bg-border-subtle mx-1" />
 
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-surface-3 hover:text-foreground"
           onClick={() => executeCommand('insertUnorderedList')}
           title="Bullet List"
         >
@@ -138,20 +138,20 @@ export default function WysiwygEditor({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-surface-3 hover:text-foreground"
           onClick={() => executeCommand('insertOrderedList')}
           title="Numbered List"
         >
           <ListOrdered className="h-3.5 w-3.5" />
         </Button>
 
-        <div className="w-[1px] h-4 bg-slate-800 mx-1" />
+        <div className="w-px h-4 bg-border-subtle mx-1" />
 
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-sm hover:bg-slate-800 hover:text-white"
+          className="h-7 w-7 p-0 rounded-sm hover:bg-surface-3 hover:text-foreground"
           onClick={() => executeCommand('removeFormat')}
           title="Clear Formatting"
         >
@@ -159,50 +159,20 @@ export default function WysiwygEditor({
         </Button>
       </div>
 
-      {/* Editor Content editable */}
       <div
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        className="p-3 outline-none overflow-y-auto text-sm prose prose-invert max-w-none text-slate-200"
         style={{ minHeight }}
-        placeholder={placeholder}
+        className="p-3 outline-none overflow-y-auto text-sm text-foreground-muted max-w-none 
+          empty:before:content-[attr(placeholder)] empty:before:text-(--foreground-dim)/50 empty:before:cursor-text
+          *:list-inside *:mt-2 *:mb-2
+          ul:list-disc ul:pl-5 
+          ol:list-decimal ol:pl-5 
+          h3:text-lg h3:font-semibold h3:mt-3 h3:mb-1 h3:text-foreground 
+          h4:text-base h4:font-semibold h4:mt-2 h4:mb-1 h4:text-foreground-muted"
+        {...(placeholder ? { placeholder } : {})}
       />
-
-      {/* Tailwind contentEditable placeholder fallback styling */}
-      <style jsx global>{`
-        [contenteditable]:empty:before {
-          content: attr(placeholder);
-          color: #475569;
-          cursor: text;
-        }
-        .prose ul {
-          list-style-type: disc !important;
-          padding-left: 1.25rem !important;
-          margin-top: 0.5rem !important;
-          margin-bottom: 0.5rem !important;
-        }
-        .prose ol {
-          list-style-type: decimal !important;
-          padding-left: 1.25rem !important;
-          margin-top: 0.5rem !important;
-          margin-bottom: 0.5rem !important;
-        }
-        .prose h3 {
-          font-size: 1.125rem !important;
-          font-weight: 600 !important;
-          margin-top: 0.75rem !important;
-          margin-bottom: 0.25rem !important;
-          color: #f8fafc !important;
-        }
-        .prose h4 {
-          font-size: 1rem !important;
-          font-weight: 600 !important;
-          margin-top: 0.5rem !important;
-          margin-bottom: 0.25rem !important;
-          color: #f1f5f9 !important;
-        }
-      `}</style>
     </div>
   );
 }
