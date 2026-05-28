@@ -74,34 +74,13 @@ export default function ProjectCharts({ stats }: ProjectChartsProps) {
   return (
     <div className='grid gap-4 md:grid-cols-12'>
       {/* Monthly line chart */}
-      <div
-        className='md:col-span-7 rounded-lg overflow-hidden'
-        style={{
-          background: 'var(--surface-2)',
-          border: '1px solid var(--border-subtle)',
-        }}
-      >
-        <div
-          className='flex items-center gap-2 px-4 py-3'
-          style={{
-            borderBottom: '1px solid var(--border-subtle)',
-            background: 'var(--surface-1)',
-          }}
-        >
-          <TrendingUp
-            className='w-3.5 h-3.5'
-            style={{ color: 'var(--foreground-dim)' }}
-          />
-          <span
-            className='text-xs font-bold'
-            style={{ color: 'var(--foreground)' }}
-          >
+      <div className='md:col-span-7 rounded-lg overflow-hidden bg-surface-2 border border-border-subtle'>
+        <div className='flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1'>
+          <TrendingUp className='w-3.5 h-3.5 text-foreground-dim' />
+          <span className='text-xs font-bold text-foreground'>
             Monthly Task Trend
           </span>
-          <span
-            className='text-[10px] ml-auto font-medium'
-            style={{ color: 'var(--foreground-dim)' }}
-          >
+          <span className='text-[10px] ml-auto font-medium text-foreground-dim'>
             Last 12 months
           </span>
         </div>
@@ -164,28 +143,10 @@ export default function ProjectCharts({ stats }: ProjectChartsProps) {
       {/* Status + Priority stacked */}
       <div className='md:col-span-5 flex flex-col gap-4'>
         {/* Status donut */}
-        <div
-          className='flex-1 rounded-lg overflow-hidden'
-          style={{
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border-subtle)',
-          }}
-        >
-          <div
-            className='flex items-center gap-2 px-4 py-3'
-            style={{
-              borderBottom: '1px solid var(--border-subtle)',
-              background: 'var(--surface-1)',
-            }}
-          >
-            <Activity
-              className='w-3.5 h-3.5'
-              style={{ color: 'var(--foreground-dim)' }}
-            />
-            <span
-              className='text-xs font-bold'
-              style={{ color: 'var(--foreground)' }}
-            >
+        <div className='flex-1 rounded-lg overflow-hidden bg-surface-2 border border-border-subtle'>
+          <div className='flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1'>
+            <Activity className='w-3.5 h-3.5 text-foreground-dim' />
+            <span className='text-xs font-bold text-foreground'>
               By Status
             </span>
           </div>
@@ -212,10 +173,7 @@ export default function ProjectCharts({ stats }: ProjectChartsProps) {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
-                  <span
-                    className='text-sm font-black'
-                    style={{ color: 'var(--foreground)' }}
-                  >
+                  <span className='text-sm font-black text-foreground'>
                     {stats.totalTasks}
                   </span>
                   <span className='field-label'>Total</span>
@@ -228,16 +186,10 @@ export default function ProjectCharts({ stats }: ProjectChartsProps) {
                       className='w-1.5 h-1.5 rounded-sm flex-shrink-0'
                       style={{ background: item.color }}
                     />
-                    <span
-                      className='text-[10px] font-medium capitalize flex-1'
-                      style={{ color: 'var(--foreground-dim)' }}
-                    >
+                    <span className='text-[10px] font-medium capitalize flex-1 text-foreground-dim'>
                       {item.name}
                     </span>
-                    <span
-                      className='text-[10px] font-bold'
-                      style={{ color: 'var(--foreground-muted)' }}
-                    >
+                    <span className='text-[10px] font-bold text-foreground-muted'>
                       {item.value}
                     </span>
                   </div>
@@ -249,28 +201,10 @@ export default function ProjectCharts({ stats }: ProjectChartsProps) {
 
         {/* Priority bar chart */}
         {priorityChartData.length > 0 && (
-          <div
-            className='rounded-lg overflow-hidden'
-            style={{
-              background: 'var(--surface-2)',
-              border: '1px solid var(--border-subtle)',
-            }}
-          >
-            <div
-              className='flex items-center gap-2 px-4 py-3'
-              style={{
-                borderBottom: '1px solid var(--border-subtle)',
-                background: 'var(--surface-1)',
-              }}
-            >
-              <AlertTriangle
-                className='w-3.5 h-3.5'
-                style={{ color: 'var(--foreground-dim)' }}
-              />
-              <span
-                className='text-xs font-bold'
-                style={{ color: 'var(--foreground)' }}
-              >
+          <div className='rounded-lg overflow-hidden bg-surface-2 border border-border-subtle'>
+            <div className='flex items-center gap-2 px-4 py-3 border-b border-border-subtle bg-surface-1'>
+              <AlertTriangle className='w-3.5 h-3.5 text-foreground-dim' />
+              <span className='text-xs font-bold text-foreground'>
                 By Priority
               </span>
             </div>

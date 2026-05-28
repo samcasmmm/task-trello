@@ -10,20 +10,26 @@ const STATUS_LABELS: Record<string, string> = {
   todo: 'To Do', in_progress: 'In Progress', in_review: 'In Review', done: 'Done', blocked: 'Blocked',
 };
 
-const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
-  todo:        { color: '#777777', bg: 'rgba(100,100,100,0.12)' },
-  in_progress: { color: '#aaaaaa', bg: 'rgba(150,150,150,0.1)' },
-  in_review:   { color: '#cccccc', bg: 'rgba(180,180,180,0.08)' },
-  done:        { color: '#6ee7b7', bg: 'rgba(110,231,183,0.1)' },
-  blocked:     { color: '#f87171', bg: 'rgba(248,113,113,0.1)' },
+const STATUS_CLASSES: Record<string, string> = {
+  todo:        'text-slate-400 bg-slate-400/10',
+  in_progress: 'text-slate-300 bg-slate-300/10',
+  in_review:   'text-slate-200 bg-slate-200/10',
+  done:        'text-emerald-400 bg-emerald-400/10',
+  blocked:     'text-rose-400 bg-rose-400/10',
 };
 
-const PRIORITY_DOT: Record<string, string> = {
-  low: '#444444', medium: '#d4a84b', high: '#e08050', urgent: '#e05555',
+const PRIORITY_DOT_CLASSES: Record<string, string> = {
+  low: 'bg-slate-600',
+  medium: 'bg-amber-500',
+  high: 'bg-orange-500',
+  urgent: 'bg-red-500',
 };
 
-const PRIORITY_COLOR: Record<string, string> = {
-  low: '#666666', medium: '#d4a84b', high: '#e08050', urgent: '#e05555',
+const PRIORITY_TEXT_CLASSES: Record<string, string> = {
+  low: 'text-slate-500',
+  medium: 'text-amber-500',
+  high: 'text-orange-500',
+  urgent: 'text-red-500',
 };
 
 const COLUMNS = [
@@ -56,36 +62,29 @@ export default function TaskList({ tasks = [] }: { projectId: string; tasks: any
   const SortIcon = ({ field }: { field: string }) => {
     if (sortField !== field) return <ArrowUpDown className='w-3 h-3 opacity-20' />;
     return sortAsc
-      ? <ArrowUp className='w-3 h-3' style={{ color: 'var(--foreground-muted)' }} />
-      : <ArrowDown className='w-3 h-3' style={{ color: 'var(--foreground-muted)' }} />;
+      ? <ArrowUp className='w-3 h-3 text-foreground-muted' />
+      : <ArrowDown className='w-3 h-3 text-foreground-muted' />;
   };
 
   return (
     <div className='space-y-3'>
       {/* Search */}
       <div className='relative max-w-xs'>
-        <Search className='w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2' style={{ color: 'var(--foreground-dim)' }} />
+        <Search className='w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-foreground-dim' />
         <input type='text' placeholder='Filter tasks...' value={filterText}
           onChange={e => setFilterText(e.target.value)}
-          className='w-full pl-8 pr-3 py-2 text-xs font-medium rounded-lg outline-none transition-all'
-          style={{ background: 'var(--surface-2)', border: '1px solid var(--border-default)', color: 'var(--foreground)' }}
-          onFocus={e => (e.currentTarget.style.borderColor = 'var(--border-strong)')}
-          onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-default)')} />
+          className='w-full pl-8 pr-3 py-2 text-xs font-medium rounded-lg outline-none transition-all bg-surface-2 border border-border-default text-foreground focus:border-border-strong' />
       </div>
 
       {/* Table */}
-      <div className='rounded-xl overflow-hidden'
-        style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+      <div className='rounded-xl overflow-hidden bg-surface-2 border border-border-subtle'>
         <div className='overflow-x-auto'>
-          <table className='w-full text-left' style={{ borderCollapse: 'collapse' }}>
+          <table className='w-full text-left border-collapse'>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--surface-1)' }}>
+              <tr className='border-b border-border-subtle bg-surface-1'>
                 {COLUMNS.map(col => (
                   <th key={col.key} onClick={() => handleSort(col.key)}
-                    className='px-4 py-3 cursor-pointer select-none transition-colors'
-                    style={{ color: 'var(--foreground-dim)' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--foreground-muted)')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--foreground-dim)')}>
+                    className='px-4 py-3 cursor-pointer select-none transition-colors text-foreground-dim hover:text-foreground-muted'>
                     <div className='flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider'>
                       {col.label}
                       <SortIcon field={col.key} />
@@ -96,31 +95,24 @@ export default function TaskList({ tasks = [] }: { projectId: string; tasks: any
             </thead>
             <tbody>
               {sorted.length > 0 ? sorted.map((task, i) => {
-                const ss = STATUS_STYLE[task.status] || STATUS_STYLE.todo;
                 return (
                   <tr key={task.id}
-                    style={{ borderBottom: i < sorted.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-3)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                    className={`hover:bg-surface-3 transition-colors ${i < sorted.length - 1 ? 'border-b border-border-subtle' : ''}`}>
                     <td className='px-4 py-3'>
                       <Link href={`/dashboard/task/${task.id}`}
-                        className='text-xs font-semibold block truncate max-w-[240px] transition-colors'
-                        style={{ color: 'var(--foreground)' }}
-                        onMouseEnter={e => (e.currentTarget.style.color = 'var(--foreground-muted)')}
-                        onMouseLeave={e => (e.currentTarget.style.color = 'var(--foreground)')}>
+                        className='text-xs font-semibold block truncate max-w-[240px] transition-colors text-foreground hover:text-foreground-muted'>
                         {task.title}
                       </Link>
                     </td>
                     <td className='px-4 py-3'>
-                      <span className='text-[10px] font-bold px-2 py-1 rounded capitalize'
-                        style={{ color: ss.color, background: ss.bg }}>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded capitalize ${STATUS_CLASSES[task.status] || STATUS_CLASSES.todo}`}>
                         {STATUS_LABELS[task.status] || task.status}
                       </span>
                     </td>
                     <td className='px-4 py-3'>
                       <div className='flex items-center gap-1.5'>
-                        <div className='w-1.5 h-1.5 rounded-full' style={{ background: PRIORITY_DOT[task.priority] || '#444' }} />
-                        <span className='text-[10px] font-semibold capitalize' style={{ color: PRIORITY_COLOR[task.priority] || '#666' }}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_DOT_CLASSES[task.priority] || 'bg-slate-600'}`} />
+                        <span className={`text-[10px] font-semibold capitalize ${PRIORITY_TEXT_CLASSES[task.priority] || 'text-slate-500'}`}>
                           {task.priority}
                         </span>
                       </div>
@@ -130,21 +122,20 @@ export default function TaskList({ tasks = [] }: { projectId: string; tasks: any
                         <div className='flex items-center gap-2'>
                           <Avatar className='h-5 w-5 rounded'>
                             <AvatarImage src={task.assigned_to_user.avatarUrl || ''} />
-                            <AvatarFallback className='text-[8px] font-bold rounded'
-                              style={{ background: 'var(--surface-3)', color: 'var(--foreground-muted)', border: '1px solid var(--border-strong)' }}>
+                            <AvatarFallback className='text-[8px] font-bold rounded bg-surface-3 text-foreground-muted border border-border-strong'>
                               {task.assigned_to_user.fullName?.substring(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <span className='text-xs font-medium' style={{ color: 'var(--foreground-muted)' }}>
+                          <span className='text-xs font-medium text-foreground-muted'>
                             {task.assigned_to_user.fullName}
                           </span>
                         </div>
                       ) : (
-                        <span className='text-xs' style={{ color: 'var(--foreground-dim)' }}>—</span>
+                        <span className='text-xs text-foreground-dim'>—</span>
                       )}
                     </td>
                     <td className='px-4 py-3'>
-                      <span className='text-[11px] font-mono' style={{ color: 'var(--foreground-dim)' }}>
+                      <span className='text-[11px] font-mono text-foreground-dim'>
                         {task.due_date ? formatDate(task.due_date) : '—'}
                       </span>
                     </td>
@@ -152,7 +143,7 @@ export default function TaskList({ tasks = [] }: { projectId: string; tasks: any
                 );
               }) : (
                 <tr>
-                  <td colSpan={5} className='px-4 py-12 text-center text-xs' style={{ color: 'var(--foreground-dim)' }}>
+                  <td colSpan={5} className='px-4 py-12 text-center text-xs text-foreground-dim'>
                     No tasks match this filter.
                   </td>
                 </tr>

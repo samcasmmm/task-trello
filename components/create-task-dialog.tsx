@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import WysiwygEditor from './wysiwyg-editor';
+import api from '@/lib/axios';
 
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
 
@@ -52,27 +53,18 @@ export default function CreateTaskDialog({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          parentTaskId,
-          title: formData.title,
-          description: formData.description,
-          priority: formData.priority,
-          startDate: formData.startDate || null,
-          dueDate: formData.dueDate || null,
-          estimatedHours: formData.estimatedHours || null,
-        }),
+      const response = await api.post('/api/tasks', {
+        projectId,
+        parentTaskId,
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        startDate: formData.startDate || null,
+        dueDate: formData.dueDate || null,
+        estimatedHours: formData.estimatedHours || null,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create task');
-      }
-
-      const task = await response.json();
+      const task = response.data;
       toast.success('Task created successfully!');
       setOpen(false);
       setFormData({
@@ -85,7 +77,8 @@ export default function CreateTaskDialog({
       });
       onSuccess?.(task);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create task');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create task';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

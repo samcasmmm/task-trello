@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import api from '@/lib/axios'
 
 export default function Page() {
   const router = useRouter()
@@ -9,8 +10,8 @@ export default function Page() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me')
-        const data = await response.json()
+        const response = await api.get('/api/auth/me')
+        const data = response.data
 
         if (data.user) {
           router.push('/dashboard')

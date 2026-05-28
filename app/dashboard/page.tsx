@@ -5,10 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Plus, Folder, ArrowRight, Users, FolderKanban } from 'lucide-react';
 import Link from 'next/link';
 import CreateTenantDialog from '@/components/create-tenant-dialog';
+import api from '@/lib/axios';
 
 interface Tenant {
-  id: string; name: string; slug: string;
-  description: string | null; logoUrl: string | null;
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
   _count: { members: number; projects: number };
 }
 
@@ -20,17 +24,23 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [meRes, tenantsRes] = await Promise.all([fetch('/api/auth/me'), fetch('/api/tenants')]);
-        const meData = await meRes.json();
+        const [meRes, tenantsRes] = await Promise.all([
+          api.get('/api/auth/me'),
+          api.get('/api/tenants'),
+        ]);
+        const meData = meRes.data;
         if (meData.user) setUser(meData.user);
-        if (tenantsRes.ok) setTenants(await tenantsRes.json());
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
+        setTenants(tenantsRes.data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);
 
-  const onTenantCreated = (t: Tenant) => setTenants(p => [...p, t]);
+  const onTenantCreated = (t: Tenant) => setTenants((p) => [...p, t]);
 
   const firstName = user?.email?.split('@')[0] || 'there';
   const hour = new Date().getHours();
@@ -38,37 +48,44 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className='flex items-center justify-center h-[60vh]'>
-        <div className='flex flex-col items-center gap-3'>
-          <div className='w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin' />
-          <p className='text-xs font-medium' style={{ color: 'var(--foreground-dim)' }}>Loading...</p>
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-7 h-7 rounded-full border border-white/10 border-t-white/40 animate-spin" />
+          <p className="text-xs font-medium text-[var(--foreground-dim)]">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='space-y-8'>
+    <div className="space-y-8">
       {/* Hero */}
-      <div className='relative overflow-hidden rounded-xl p-6'
-        style={{ background: 'var(--surface-2)', border: '1px solid var(--border-default)' }}>
+      <div className="relative overflow-hidden rounded-xl p-6 bg-[var(--surface-2)] border border-[var(--border-default)]">
         <div>
-          <p className='text-[11px] font-semibold mb-1.5' style={{ color: 'var(--foreground-dim)' }}>
+          <p className="text-[11px] font-semibold mb-1.5 text-[var(--foreground-dim)]">
             {greeting}
           </p>
-          <h1 className='text-2xl font-extrabold tracking-tight' style={{ color: 'var(--foreground)' }}>
+          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--foreground)]">
             {firstName.charAt(0).toUpperCase() + firstName.slice(1)}
           </h1>
-          <p className='text-sm mt-1' style={{ color: 'var(--foreground-muted)' }}>
-            {tenants.length > 0
-              ? <>You have <span style={{ color: 'var(--foreground)' }} className='font-semibold'>{tenants.length} workspace{tenants.length !== 1 ? 's' : ''}</span> active.</>
-              : 'Create your first workspace to get started.'}
+          <p className="text-sm mt-1 text-[var(--foreground-muted)]">
+            {tenants.length > 0 ? (
+              <>
+                You have{' '}
+                <span className="font-semibold text-[var(--foreground)]">
+                  {tenants.length} workspace{tenants.length !== 1 ? 's' : ''}
+                </span>{' '}
+                active.
+              </>
+            ) : (
+              'Create your first workspace to get started.'
+            )}
           </p>
         </div>
-        <div className='mt-4'>
+        <div className="mt-4">
           <CreateTenantDialog onSuccess={onTenantCreated}>
-            <Button className='btn-primary text-sm h-9 px-4 rounded-md'>
-              <Plus className='w-4 h-4 mr-2' />
+            <Button className="btn-primary text-sm h-9 px-4 rounded-md">
+              <Plus className="w-4 h-4 mr-2" />
               New Workspace
             </Button>
           </CreateTenantDialog>
@@ -77,46 +94,39 @@ export default function DashboardPage() {
 
       {/* Workspaces grid */}
       {tenants.length > 0 ? (
-        <div className='space-y-3'>
-          <div className='flex items-center justify-between'>
-            <h2 className='section-heading'>Your Workspaces</h2>
-            <span className='text-[10px] font-bold px-2 py-1 rounded-full'
-              style={{ background: 'var(--surface-3)', color: 'var(--foreground-dim)', border: '1px solid var(--border-subtle)' }}>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="section-heading">Your Workspaces</h2>
+            <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[var(--surface-3)] text-[var(--foreground-dim)] border border-[var(--border-subtle)]">
               {tenants.length} total
             </span>
           </div>
-          <div className='grid gap-3 md:grid-cols-2 lg:grid-cols-3'>
-            {tenants.map(tenant => (
-              <Link key={tenant.id} href={`/dashboard/tenant/${tenant.id}`} className='group block'>
-                <div className='relative overflow-hidden rounded-xl transition-all duration-200 hover:-translate-y-0.5'
-                  style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-strong)')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {tenants.map((tenant) => (
+              <Link key={tenant.id} href={`/dashboard/tenant/${tenant.id}`} className="group block">
+                <div className="relative overflow-hidden rounded-xl transition-all duration-200 hover:-translate-y-0.5 bg-[var(--surface-2)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)]">
                   {/* Top micro bar */}
-                  <div className='h-px w-full' style={{ background: 'var(--border-default)' }} />
-                  <div className='p-4'>
-                    <div className='flex items-start justify-between gap-3 mb-3'>
-                      <div className='w-9 h-9 rounded-lg flex items-center justify-center text-sm font-extrabold flex-shrink-0'
-                        style={{ background: 'var(--surface-3)', border: '1px solid var(--border-strong)', color: 'var(--foreground-muted)' }}>
+                  <div className="h-px w-full bg-[var(--border-default)]" />
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-extrabold flex-shrink-0 bg-[var(--surface-3)] border border-[var(--border-strong)] text-[var(--foreground-muted)]">
                         {tenant.name.charAt(0).toUpperCase()}
                       </div>
-                      <ArrowRight className='w-4 h-4 mt-1 opacity-0 group-hover:opacity-100 transition-opacity'
-                        style={{ color: 'var(--foreground-dim)' }} />
+                      <ArrowRight className="w-4 h-4 mt-1 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--foreground-dim)]" />
                     </div>
-                    <h3 className='text-sm font-bold mb-1 transition-colors'
-                      style={{ color: 'var(--foreground)' }}>
+                    <h3 className="text-sm font-bold mb-1 transition-colors text-[var(--foreground)]">
                       {tenant.name}
                     </h3>
-                    <p className='text-xs line-clamp-2 mb-4 leading-relaxed' style={{ color: 'var(--foreground-muted)' }}>
+                    <p className="text-xs line-clamp-2 mb-4 leading-relaxed text-[var(--foreground-muted)]">
                       {tenant.description || 'No description provided.'}
                     </p>
-                    <div className='flex items-center gap-4 pt-3' style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                      <div className='flex items-center gap-1.5 text-[10px] font-semibold' style={{ color: 'var(--foreground-dim)' }}>
-                        <FolderKanban className='w-3 h-3' />
+                    <div className="flex items-center gap-4 pt-3 border-t border-[var(--border-subtle)]">
+                      <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--foreground-dim)]">
+                        <FolderKanban className="w-3 h-3" />
                         {tenant._count.projects} projects
                       </div>
-                      <div className='flex items-center gap-1.5 text-[10px] font-semibold' style={{ color: 'var(--foreground-dim)' }}>
-                        <Users className='w-3 h-3' />
+                      <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--foreground-dim)]">
+                        <Users className="w-3 h-3" />
                         {tenant._count.members} members
                       </div>
                     </div>
@@ -124,37 +134,34 @@ export default function DashboardPage() {
                 </div>
               </Link>
             ))}
+
             {/* Add card */}
             <CreateTenantDialog onSuccess={onTenantCreated}>
-              <div className='rounded-xl cursor-pointer group transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-center h-[168px]'
-                style={{ background: 'var(--surface-2)', border: '1px dashed var(--border-default)' }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-strong)')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-default)')}>
-                <div className='flex flex-col items-center gap-2'>
-                  <div className='w-9 h-9 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform'
-                    style={{ background: 'var(--surface-3)', border: '1px solid var(--border-strong)' }}>
-                    <Plus className='w-4 h-4' style={{ color: 'var(--foreground-muted)' }} />
+              <div className="rounded-xl cursor-pointer group transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-center h-[168px] bg-surface-2 border border-dashed border-border-default hover:border-[var(--border-strong)]">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform bg-[var(--surface-3)] border border-[var(--border-strong)]">
+                    <Plus className="w-4 h-4 text-[var(--foreground-muted)]" />
                   </div>
-                  <p className='text-xs font-semibold' style={{ color: 'var(--foreground-dim)' }}>Add Workspace</p>
+                  <p className="text-xs font-semibold text-[var(--foreground-dim)]">
+                    Add Workspace
+                  </p>
                 </div>
               </div>
             </CreateTenantDialog>
           </div>
         </div>
       ) : (
-        <div className='rounded-xl p-12 text-center'
-          style={{ background: 'var(--surface-2)', border: '1px dashed var(--border-default)' }}>
-          <div className='w-12 h-12 rounded-xl mx-auto mb-4 flex items-center justify-center'
-            style={{ background: 'var(--surface-3)', border: '1px solid var(--border-strong)' }}>
-            <Folder className='w-6 h-6' style={{ color: 'var(--foreground-dim)' }} />
+        <div className="rounded-xl p-12 text-center bg-[var(--surface-2)] border border-dashed border-[var(--border-default)]">
+          <div className="w-12 h-12 rounded-xl mx-auto mb-4 flex items-center justify-center bg-[var(--surface-3)] border border-[var(--border-strong)]">
+            <Folder className="w-6 h-6 text-[var(--foreground-dim)]" />
           </div>
-          <h2 className='text-base font-bold mb-2' style={{ color: 'var(--foreground)' }}>No workspaces yet</h2>
-          <p className='text-sm mb-5' style={{ color: 'var(--foreground-muted)' }}>
+          <h2 className="text-base font-bold mb-2 text-[var(--foreground)]">No workspaces yet</h2>
+          <p className="text-sm mb-5 text-foreground-muted">
             Create your first workspace to start organizing projects and tasks.
           </p>
           <CreateTenantDialog onSuccess={onTenantCreated}>
-            <Button className='btn-primary h-9 px-5 rounded-md text-sm'>
-              <Plus className='w-4 h-4 mr-2' />
+            <Button className="btn-primary h-9 px-5 rounded-md text-sm">
+              <Plus className="w-4 h-4 mr-2" />
               Create Workspace
             </Button>
           </CreateTenantDialog>

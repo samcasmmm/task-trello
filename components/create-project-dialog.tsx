@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
+import api from '@/lib/axios'
 
 const COLORS = [
   '#3B82F6', // blue
@@ -49,29 +50,21 @@ export default function CreateProjectDialog({
     setLoading(true)
 
     try {
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenantId,
-          name: formData.name,
-          description: formData.description,
-          color: formData.color,
-        }),
+      const response = await api.post('/api/projects', {
+        tenantId,
+        name: formData.name,
+        description: formData.description,
+        color: formData.color,
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to create project')
-      }
-
-      const project = await response.json()
+      const project = response.data
       toast.success('Project created successfully!')
       setOpen(false)
       setFormData({ name: '', description: '', color: COLORS[0] })
       onSuccess?.(project)
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create project')
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create project'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

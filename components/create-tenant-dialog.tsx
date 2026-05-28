@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
+import api from '@/lib/axios'
 
 interface CreateTenantDialogProps {
   children: React.ReactNode
@@ -36,24 +37,16 @@ export default function CreateTenantDialog({
     setLoading(true)
 
     try {
-      const response = await fetch('/api/tenants', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
+      const response = await api.post('/api/tenants', formData)
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to create workspace')
-      }
-
-      const tenant = await response.json()
+      const tenant = response.data
       toast.success('Workspace created successfully!')
       setOpen(false)
       setFormData({ name: '', slug: '', description: '' })
       onSuccess?.(tenant)
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create workspace')
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create workspace'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

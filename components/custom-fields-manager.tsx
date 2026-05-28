@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select'
 import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import api from '@/lib/axios'
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
@@ -57,24 +58,20 @@ export default function CustomFieldsManager({
 
     setLoading(true)
     try {
-      const response = await fetch(`/api/projects/${projectId}/custom-fields`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newField.name,
-          fieldType: newField.field_type,
-          options: newField.options,
-        }),
+      const response = await api.post(`/api/projects/${projectId}/custom-fields`, {
+        name: newField.name,
+        fieldType: newField.field_type,
+        options: newField.options,
       })
-      if (!response.ok) throw new Error('Failed to create custom field')
-      const result = await response.json()
+      const result = response.data
 
       setFields([...fields, result])
       setNewField({ name: '', field_type: 'text', options: null })
       setShowForm(false)
       toast.success('Custom field created!')
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create custom field')
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create custom field'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

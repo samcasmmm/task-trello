@@ -15,12 +15,7 @@ const PRIORITY_BORDER_COLORS: Record<string, string> = {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function TaskCalendar({
-  tasks = [],
-}: {
-  projectId: string;
-  tasks: any[];
-}) {
+export default function TaskCalendar({ tasks = [] }: { projectId: string; tasks: any[] }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const year = currentDate.getFullYear();
@@ -68,64 +63,51 @@ export default function TaskCalendar({
   };
 
   return (
-    <Card
-      className='p-6 rounded-lg'
-      style={{
-        background: 'var(--surface-2)',
-        border: '1px solid var(--border-subtle)',
-      }}
-    >
-      <CardHeader className='flex flex-row items-center justify-between pb-6 border-b border-slate-800 mb-6'>
-        <CardTitle className='text-lg font-bold flex items-center gap-2 text-slate-100'>
-          <CalendarDays className='w-5 h-5 text-slate-400' />
+    <Card className="p-6 rounded-lg bg-surface-2 border border-border-subtle">
+      <CardHeader className="flex flex-row items-center justify-between pb-6 border-b border-slate-800 mb-6">
+        <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-100">
+          <CalendarDays className="w-5 h-5 text-slate-400" />
           {currentDate.toLocaleString('default', {
             month: 'long',
             year: 'numeric',
           })}
         </CardTitle>
-        <div className='flex items-center gap-1.5'>
+        <div className="flex items-center gap-1.5">
           <Button
-            variant='outline'
-            size='icon'
+            variant="outline"
+            size="icon"
             onClick={prevMonth}
-            className='btn-ghost h-8 w-8 text-xs rounded-md'
+            className="btn-ghost h-8 w-8 text-xs rounded-md"
           >
-            <ChevronLeft className='w-4 h-4' />
+            <ChevronLeft className="w-4 h-4" />
           </Button>
           <Button
-            variant='outline'
-            size='sm'
+            variant="outline"
+            size="sm"
             onClick={() => setCurrentDate(new Date())}
-            className='btn-ghost h-8 px-3 text-xs rounded-md font-semibold'
+            className="btn-ghost h-8 px-3 text-xs rounded-md font-semibold"
           >
             Today
           </Button>
           <Button
-            variant='outline'
-            size='icon'
+            variant="outline"
+            size="icon"
             onClick={nextMonth}
-            className='btn-ghost h-8 w-8 text-xs rounded-md'
+            className="btn-ghost h-8 w-8 text-xs rounded-md"
           >
-            <ChevronRight className='w-4 h-4' />
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </CardHeader>
 
-      <CardContent className='p-0'>
+      <CardContent className="p-0">
         {/* Calendar Grid */}
-        <div
-          className='grid grid-cols-7 gap-px rounded-lg overflow-hidden border'
-          style={{
-            background: 'var(--border-subtle)',
-            borderColor: 'var(--border-subtle)',
-          }}
-        >
+        <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border bg-border-subtle border-border-subtle">
           {/* Weekday headers */}
           {WEEKDAYS.map((day) => (
             <div
               key={day}
-              className='py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-400'
-              style={{ background: 'var(--surface-1)' }}
+              className="py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-400 bg-surface-1"
             >
               {day}
             </div>
@@ -134,38 +116,26 @@ export default function TaskCalendar({
           {/* Date cells */}
           {cells.map((cell, idx) => {
             const dateTasks = getTasksForDate(cell.date);
-            const isToday =
-              cell.date &&
-              cell.date.toDateString() === new Date().toDateString();
+            const isToday = cell.date && cell.date.toDateString() === new Date().toDateString();
 
             return (
               <div
                 key={idx}
-                className='min-h-[110px] p-2 flex flex-col gap-1 border-r border-b transition-colors'
-                style={{
-                  background: cell.day === null ? 'var(--background)' : 'var(--surface-2)',
-                  borderColor: 'var(--border-subtle)',
-                }}
+                className={`min-h-[110px] p-2 flex flex-col gap-1 border-r border-b transition-colors border-border-subtle ${
+                  cell.day === null ? 'bg-background' : 'bg-surface-2'
+                }`}
               >
                 {cell.day && (
-                  <div className='flex justify-between items-center mb-1'>
+                  <div className="flex justify-between items-center mb-1">
                     <span
                       className={`text-xs font-bold font-mono rounded-full w-5 h-5 flex items-center justify-center ${
-                        isToday
-                          ? 'bg-slate-100 text-slate-950'
-                          : 'text-slate-400'
+                        isToday ? 'bg-slate-100 text-slate-950' : 'text-slate-400'
                       }`}
                     >
                       {cell.day}
                     </span>
                     {dateTasks.length > 0 && (
-                      <span
-                        className='text-[9px] font-bold px-1.5 py-0.5 rounded'
-                        style={{
-                          background: 'var(--surface-3)',
-                          color: 'var(--foreground-muted)',
-                        }}
-                      >
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-surface-3 text-foreground-muted">
                         {dateTasks.length} task{dateTasks.length !== 1 ? 's' : ''}
                       </span>
                     )}
@@ -173,7 +143,7 @@ export default function TaskCalendar({
                 )}
 
                 {/* Task list tags inside calendar date box */}
-                <div className='flex-1 overflow-y-auto space-y-1 max-h-[70px] scrollbar-none'>
+                <div className="flex-1 overflow-y-auto space-y-1 max-h-[70px] scrollbar-none">
                   {dateTasks.map((t) => (
                     <Link key={t.id} href={`/dashboard/task/${t.id}`}>
                       <div

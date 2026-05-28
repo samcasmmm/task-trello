@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Plus, Mail, UserPlus, Trash2, ArrowRightLeft, Shield, Users, GitMerge } from 'lucide-react';
 import { toast } from 'sonner';
+import api from '@/lib/axios';
 
 interface TeamMember {
   id: string;
@@ -64,21 +65,15 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
   const fetchMembersAndRoles = async () => {
     try {
       const [membersRes, rolesRes] = await Promise.all([
-        fetch(`/api/tenants/${tenantId}/members`),
-        fetch(`/api/tenants/${tenantId}/roles`),
+        api.get(`/api/tenants/${tenantId}/members`),
+        api.get(`/api/tenants/${tenantId}/roles`),
       ]);
 
-      if (membersRes.ok && rolesRes.ok) {
-        const membersData = await membersRes.json();
-        const rolesData = await rolesRes.json();
-        setTeamMembers(membersData);
-        setAvailableRoles(rolesData);
-      } else {
-        toast.error('Failed to load team data.');
-      }
+      setTeamMembers(membersRes.data);
+      setAvailableRoles(rolesRes.data);
     } catch (error) {
       console.error('Error loading team manager:', error);
-      toast.error('Connection error.');
+      toast.error('Failed to load team data.');
     } finally {
       setLoading(false);
     }
@@ -97,22 +92,13 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
 
     setActionLoading('invite');
     try {
-      const response = await fetch(`/api/tenants/${tenantId}/members`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: inviteEmail.trim(),
-          role: inviteRole,
-          reportsToId: inviteReportsTo === '__none__' ? null : inviteReportsTo,
-        }),
+      const response = await api.post(`/api/tenants/${tenantId}/members`, {
+        email: inviteEmail.trim(),
+        role: inviteRole,
+        reportsToId: inviteReportsTo === '__none__' ? null : inviteReportsTo,
       });
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Invitation failed');
-      }
-
-      const result = await response.json();
+      const result = response.data;
       
       if (result.isAutoCreated) {
         toast.success(`Account created and invited: ${inviteEmail}. Temporary password: Welcome123!`, {
@@ -128,7 +114,8 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
       setShowInviteDialog(false);
       fetchMembersAndRoles();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to invite user.');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to invite user.';
+      toast.error(errorMessage);
     } finally {
       setActionLoading(null);
     }
@@ -143,22 +130,13 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
 
     setActionLoading('create');
     try {
-      const memberRes = await fetch(`/api/tenants/${tenantId}/members`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: createForm.email,
-          fullName: createForm.fullName,
-          password: createForm.password,
-          role: createForm.role,
-          reportsToId: createForm.reportsToId === '__none__' ? null : createForm.reportsToId,
-        }),
+      await api.post(`/api/tenants/${tenantId}/members`, {
+        email: createForm.email,
+        fullName: createForm.fullName,
+        password: createForm.password,
+        role: createForm.role,
+        reportsToId: createForm.reportsToId === '__none__' ? null : createForm.reportsToId,
       });
-
-      if (!memberRes.ok) {
-        const errData = await memberRes.json();
-        throw new Error(errData.error || 'Failed to create user and add to workspace.');
-      }
 
       toast.success(`Registered and added ${createForm.fullName} to team!`);
       setCreateForm({
@@ -171,7 +149,8 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
       setShowCreateDialog(false);
       fetchMembersAndRoles();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create user.');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create user.';
+      toast.error(errorMessage);
     } finally {
       setActionLoading(null);
     }
@@ -180,17 +159,12 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
   const handleRoleChange = async (memberId: string, newRole: string) => {
     setActionLoading(memberId);
     try {
-      const response = await fetch(`/api/tenants/${tenantId}/members/${memberId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: newRole }),
-      });
-
-      if (!response.ok) throw new Error('Failed to update role.');
+      await api.patch(`/api/tenants/${tenantId}/members/${memberId}`, { role: newRole });
       toast.success('Member role updated.');
       fetchMembersAndRoles();
     } catch (error: any) {
-      toast.error(error.message || 'Role change failed.');
+      const errorMessage = error.response?.data?.error || error.message || 'Role change failed.';
+      toast.error(errorMessage);
     } finally {
       setActionLoading(null);
     }
@@ -199,17 +173,15 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
   const handleManagerChange = async (memberId: string, newManagerUserId: string) => {
     setActionLoading(memberId);
     try {
-      const response = await fetch(`/api/tenants/${tenantId}/members/${memberId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportsToId: newManagerUserId === '__none__' ? null : newManagerUserId }),
+      await api.patch(`/api/tenants/${tenantId}/members/${memberId}`, {
+        reportsToId: newManagerUserId === '__none__' ? null : newManagerUserId
       });
 
-      if (!response.ok) throw new Error('Failed to update reporting manager.');
       toast.success('Reporting line updated.');
       fetchMembersAndRoles();
     } catch (error: any) {
-      toast.error(error.message || 'Manager change failed.');
+      const errorMessage = error.response?.data?.error || error.message || 'Manager change failed.';
+      toast.error(errorMessage);
     } finally {
       setActionLoading(null);
     }
@@ -222,19 +194,13 @@ export default function TeamMembersManager({ tenantId }: { tenantId: string }) {
 
     setActionLoading(memberId);
     try {
-      const response = await fetch(`/api/tenants/${tenantId}/members/${memberId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to remove member.');
-      }
+      await api.delete(`/api/tenants/${tenantId}/members/${memberId}`);
 
       toast.success(`${name} removed successfully.`);
       fetchMembersAndRoles();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to remove member.');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to remove member.';
+      toast.error(errorMessage);
     } finally {
       setActionLoading(null);
     }

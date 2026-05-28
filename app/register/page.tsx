@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { CheckSquare } from 'lucide-react'
+import api from '@/lib/axios'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -23,21 +24,13 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Registration failed')
-      }
+      await api.post('/api/auth/register', formData)
 
       toast.success('Account created successfully')
       router.push('/dashboard')
     } catch (error: any) {
-      toast.error(error.message || 'Registration failed')
+      const errorMessage = error.response?.data?.error || error.message || 'Registration failed'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

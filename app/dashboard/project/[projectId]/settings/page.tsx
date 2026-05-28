@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import CustomFieldsManager from '@/components/custom-fields-manager'
+import api from '@/lib/axios'
 
 export default function ProjectSettingsPage() {
   const params = useParams()
@@ -17,13 +18,8 @@ export default function ProjectSettingsPage() {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await fetch(`/api/projects/${projectId}`)
-        if (response.ok) {
-          const data = await response.json()
-          setProject(data)
-        } else {
-          router.push('/dashboard')
-        }
+        const response = await api.get(`/api/projects/${projectId}`)
+        setProject(response.data)
       } catch (error) {
         console.error('Error fetching project:', error)
         router.push('/dashboard')

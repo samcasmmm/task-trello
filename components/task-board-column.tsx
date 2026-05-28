@@ -8,52 +8,40 @@ export const STATUS_CONFIG: Record<
   string,
   {
     label: string;
-    barColor: string;
-    countBg: string;
-    countColor: string;
-    dropBg: string;
-    dropBorder: string;
+    barClass: string;
+    countClass: string;
+    dropActive: string;
   }
 > = {
   todo: {
     label: 'To Do',
-    barColor: '#444444',
-    countBg: 'rgba(80,80,80,0.15)',
-    countColor: '#777777',
-    dropBg: 'rgba(60,60,60,0.06)',
-    dropBorder: '#444444',
+    barClass: 'bg-slate-600',
+    countClass: 'bg-slate-800/40 text-slate-400',
+    dropActive: 'bg-slate-800/10 border-slate-700 border-dashed',
   },
   in_progress: {
     label: 'In Progress',
-    barColor: '#888888',
-    countBg: 'rgba(136,136,136,0.12)',
-    countColor: '#aaaaaa',
-    dropBg: 'rgba(100,100,100,0.06)',
-    dropBorder: '#888888',
+    barClass: 'bg-slate-400',
+    countClass: 'bg-slate-700/40 text-slate-300',
+    dropActive: 'bg-slate-700/10 border-slate-600 border-dashed',
   },
   in_review: {
     label: 'In Review',
-    barColor: '#aaaaaa',
-    countBg: 'rgba(170,170,170,0.12)',
-    countColor: '#cccccc',
-    dropBg: 'rgba(130,130,130,0.06)',
-    dropBorder: '#aaaaaa',
+    barClass: 'bg-slate-300',
+    countClass: 'bg-slate-600/40 text-slate-200',
+    dropActive: 'bg-slate-600/10 border-slate-500 border-dashed',
   },
   done: {
     label: 'Done',
-    barColor: '#6ee7b7',
-    countBg: 'rgba(110,231,183,0.1)',
-    countColor: '#6ee7b7',
-    dropBg: 'rgba(110,231,183,0.04)',
-    dropBorder: '#6ee7b7',
+    barClass: 'bg-emerald-400',
+    countClass: 'bg-emerald-950/40 text-emerald-400',
+    dropActive: 'bg-emerald-950/10 border-emerald-500/50 border-dashed',
   },
   blocked: {
     label: 'Blocked',
-    barColor: '#e05555',
-    countBg: 'rgba(224,85,85,0.1)',
-    countColor: '#f87171',
-    dropBg: 'rgba(224,85,85,0.04)',
-    dropBorder: '#e05555',
+    barClass: 'bg-rose-500',
+    countClass: 'bg-rose-950/40 text-rose-400',
+    dropActive: 'bg-rose-950/10 border-rose-500/50 border-dashed',
   },
 };
 
@@ -94,15 +82,13 @@ export function TaskBoardColumn({
       {/* Column header */}
       <div className='flex items-center gap-2 px-0.5 py-1.5'>
         <div
-          className='w-1.5 h-1.5 rounded-full flex-shrink-0'
-          style={{ background: cfg.barColor }}
+          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.barClass}`}
         />
-        <span className='text-xs font-bold' style={{ color: 'var(--foreground)' }}>
+        <span className='text-xs font-bold text-foreground'>
           {cfg.label}
         </span>
         <span
-          className='text-[10px] font-bold px-1.5 py-0.5 rounded-full'
-          style={{ background: cfg.countBg, color: cfg.countColor }}
+          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cfg.countClass}`}
         >
           {tasks.length}
         </span>
@@ -110,13 +96,11 @@ export function TaskBoardColumn({
 
       {/* Drop zone */}
       <div
-        className='flex flex-col gap-2 min-h-[480px] rounded-lg p-2 transition-all duration-200'
-        style={{
-          background: isDragTarget ? cfg.dropBg : 'var(--surface-2)',
-          border: isDragTarget
-            ? `1px dashed ${cfg.dropBorder}88`
-            : '1px solid var(--border-subtle)',
-        }}
+        className={`flex flex-col gap-2 min-h-[480px] rounded-lg p-2 transition-all duration-200 border ${
+          isDragTarget
+            ? `${cfg.dropActive}`
+            : 'border-border-subtle bg-surface-2'
+        }`}
       >
         {tasks.map((task) => (
           <TaskBoardCard
@@ -130,18 +114,7 @@ export function TaskBoardColumn({
 
         {/* Add task button */}
         <CreateTaskDialog projectId={projectId} onSuccess={onTaskCreated}>
-          <button
-            className='w-full flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-medium transition-all mt-auto'
-            style={{ color: 'var(--foreground-dim)', border: '1px dashed var(--border-subtle)' }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)';
-              (e.currentTarget as HTMLElement).style.color = 'var(--foreground-muted)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-subtle)';
-              (e.currentTarget as HTMLElement).style.color = 'var(--foreground-dim)';
-            }}
-          >
+          <button className='w-full flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-medium transition-all mt-auto border border-dashed border-border-subtle text-foreground-dim hover:border-border-strong hover:text-foreground-muted'>
             <Plus className='w-3 h-3' />
             Add task
           </button>

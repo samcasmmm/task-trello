@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { TaskBoardColumn } from './task-board-column';
+import api from '@/lib/axios';
 
 const STATUSES = ['todo', 'in_progress', 'in_review', 'done', 'blocked'];
 
@@ -38,11 +39,7 @@ export default function TaskBoard({
     if (!task || task.status === newStatus) return;
     onTaskMoved?.(taskId, newStatus);
     try {
-      await fetch(`/api/tasks/${taskId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      await api.patch(`/api/tasks/${taskId}`, { status: newStatus });
     } catch {
       onTaskMoved?.(taskId, task.status);
     }

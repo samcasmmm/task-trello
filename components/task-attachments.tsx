@@ -22,20 +22,8 @@ export default function TaskAttachments({
   };
 
   return (
-    <Card
-      className='rounded-lg overflow-hidden'
-      style={{
-        background: 'var(--surface-2)',
-        border: '1px solid var(--border-subtle)',
-      }}
-    >
-      <CardHeader
-        className='pb-3 border-b'
-        style={{
-          background: 'var(--surface-1)',
-          borderColor: 'var(--border-subtle)',
-        }}
-      >
+    <Card className='rounded-lg overflow-hidden bg-surface-2 border border-border-subtle'>
+      <CardHeader className='pb-3 border-b bg-surface-1 border-border-subtle'>
         <CardTitle className='text-sm font-bold text-slate-300 flex items-center gap-2'>
           <File className='w-4 h-4 text-slate-500' />
           Attachments ({attachments.length})
@@ -47,19 +35,9 @@ export default function TaskAttachments({
             {attachments.map((attachment: any) => (
               <div
                 key={attachment.id}
-                className='flex items-center gap-3 p-3 rounded-lg border'
-                style={{
-                  background: 'var(--surface-3)',
-                  borderColor: 'var(--border-subtle)',
-                }}
+                className='flex items-center gap-3 p-3 rounded-lg border bg-surface-3 border-border-subtle'
               >
-                <div
-                  className='flex-shrink-0 w-10 h-10 rounded flex items-center justify-center border'
-                  style={{
-                    background: 'var(--surface-1)',
-                    borderColor: 'var(--border-strong)',
-                  }}
-                >
+                <div className='flex-shrink-0 w-10 h-10 rounded flex items-center justify-center border bg-surface-1 border-border-strong'>
                   <span className='text-[10px] font-black text-slate-400'>
                     {getFileIcon(attachment.filename)}
                   </span>

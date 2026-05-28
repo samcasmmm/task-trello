@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Trash2, UserPlus, ShieldAlert, FolderKanban, History, Search, RefreshCw, Key } from 'lucide-react'
 import { toast } from 'sonner'
+import api from '@/lib/axios'
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('users')
@@ -40,22 +41,14 @@ export default function AdminPage() {
     setLoading(true)
     try {
       const [usersRes, tenantsRes, logsRes] = await Promise.all([
-        fetch('/api/admin/users'),
-        fetch('/api/admin/tenants'),
-        fetch('/api/admin/logs'),
+        api.get('/api/admin/users'),
+        api.get('/api/admin/tenants'),
+        api.get('/api/admin/logs'),
       ])
 
-      if (usersRes.ok && tenantsRes.ok && logsRes.ok) {
-        const usersData = await usersRes.json()
-        const tenantsData = await tenantsRes.json()
-        const logsData = await logsRes.json()
-        
-        setUsers(usersData)
-        setTenants(tenantsData)
-        setLogs(logsData)
-      } else {
-        toast.error('Failed to load admin data')
-      }
+      setUsers(usersRes.data)
+      setTenants(tenantsRes.data)
+      setLogs(logsRes.data)
     } catch (error) {
       console.error('Error fetching admin data:', error)
       toast.error('Connection error while fetching admin data')
@@ -76,43 +69,27 @@ export default function AdminPage() {
     }
 
     try {
-      const res = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser),
-      })
+      await api.post('/api/admin/users', newUser)
 
-      if (res.ok) {
-        toast.success('User created successfully')
-        setIsCreateOpen(false)
-        setNewUser({ fullName: '', email: '', password: '', roleId: 'r-member' })
-        fetchData()
-      } else {
-        const data = await res.json()
-        toast.error(data.error || 'Failed to create user')
-      }
-    } catch (error) {
-      toast.error('Failed to register user')
+      toast.success('User created successfully')
+      setIsCreateOpen(false)
+      setNewUser({ fullName: '', email: '', password: '', roleId: 'r-member' })
+      fetchData()
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create user'
+      toast.error(errorMessage)
     }
   }
 
   const handleRoleChange = async (userId: string, newRoleId: string) => {
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roleId: newRoleId }),
-      })
+      await api.patch(`/api/admin/users/${userId}`, { roleId: newRoleId })
 
-      if (res.ok) {
-        toast.success('User role updated successfully')
-        fetchData()
-      } else {
-        const data = await res.json()
-        toast.error(data.error || 'Failed to update user role')
-      }
-    } catch (error) {
-      toast.error('Failed to update user role')
+      toast.success('User role updated successfully')
+      fetchData()
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to update user role'
+      toast.error(errorMessage)
     }
   }
 
@@ -122,19 +99,13 @@ export default function AdminPage() {
     }
 
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
-        method: 'DELETE',
-      })
+      await api.delete(`/api/admin/users/${userId}`)
 
-      if (res.ok) {
-        toast.success('User deleted successfully')
-        fetchData()
-      } else {
-        const data = await res.json()
-        toast.error(data.error || 'Failed to delete user')
-      }
-    } catch (error) {
-      toast.error('Failed to delete user')
+      toast.success('User deleted successfully')
+      fetchData()
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete user'
+      toast.error(errorMessage)
     }
   }
 

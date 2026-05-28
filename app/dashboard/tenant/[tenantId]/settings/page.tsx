@@ -14,6 +14,7 @@ import { ChevronLeft, Shield, Users, GitMerge, Plus, ArrowRight, Settings, Spark
 import Link from 'next/link'
 import { toast } from 'sonner'
 import TeamMembersManager from '@/components/team-members-manager'
+import api from '@/lib/axios'
 
 interface WorkspaceRole {
   id: string;
@@ -61,27 +62,19 @@ export default function TenantSettingsPage() {
 
   const fetchTenantData = async () => {
     try {
-      const response = await fetch(`/api/tenants/${tenantId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setTenant(data)
-      } else {
-        router.push('/dashboard')
-        return
-      }
+      const response = await api.get(`/api/tenants/${tenantId}`)
+      setTenant(response.data)
 
       // Fetch custom roles, system permissions, and members for the hierarchy
       const [rolesRes, permsRes, membersRes] = await Promise.all([
-        fetch(`/api/tenants/${tenantId}/roles`),
-        fetch('/api/permissions'),
-        fetch(`/api/tenants/${tenantId}/members`),
+        api.get(`/api/tenants/${tenantId}/roles`),
+        api.get('/api/permissions'),
+        api.get(`/api/tenants/${tenantId}/members`),
       ])
 
-      if (rolesRes.ok && permsRes.ok && membersRes.ok) {
-        setRolesList(await rolesRes.json())
-        setPermissionsList(await permsRes.json())
-        setTeamMembers(await membersRes.json())
-      }
+      setRolesList(rolesRes.data)
+      setPermissionsList(permsRes.data)
+      setTeamMembers(membersRes.data)
     } catch (error) {
       console.error('Error fetching tenant details:', error)
       router.push('/dashboard')
@@ -103,17 +96,11 @@ export default function TenantSettingsPage() {
 
     setRolesLoading(true)
     try {
-      const response = await fetch(`/api/tenants/${tenantId}/roles`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newRole.name.trim().toLowerCase().replace(/\s+/g, '_'),
-          description: newRole.description,
-          permissionIds: selectedPermissions,
-        }),
+      await api.post(`/api/tenants/${tenantId}/roles`, {
+        name: newRole.name.trim().toLowerCase().replace(/\s+/g, '_'),
+        description: newRole.description,
+        permissionIds: selectedPermissions,
       })
-
-      if (!response.ok) throw new Error('Failed to create role.')
 
       toast.success(`Custom role "${newRole.name}" created successfully!`)
       setNewRole({ name: '', description: '' })
@@ -121,7 +108,8 @@ export default function TenantSettingsPage() {
       setShowRoleDialog(false)
       fetchTenantData()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create role.')
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create role.'
+      toast.error(errorMessage)
     } finally {
       setRolesLoading(false)
     }
